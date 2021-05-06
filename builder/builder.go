@@ -2,28 +2,29 @@ package builder
 
 import (
 	"fmt"
-	. "github.com/murlokito/ccex"
-
+	"github.com/murlokito/ccex"
 	"github.com/murlokito/ccex/config"
+	"github.com/murlokito/ccex/exchange"
+	"github.com/murlokito/ccex/ftx"
 )
 
 // NewExchange returns a configured client with the passed config.
-func NewExchange(exchange Exchange, config *config.Configuration) (*ExchangeClient, error) {
+func NewExchange(exchange exchange.Exchange, config *config.Configuration) (*exchange.ExchangeClient, error) {
 	switch exchange {
 	case Binance:
-		return nil, ErrExchangeNotImplemented
+		return nil, ccex.ErrExchangeNotImplemented
 	case BinanceUS:
-		return nil, ErrExchangeNotImplemented
+		return nil, ccex.ErrExchangeNotImplemented
 	case BitMEX:
-		return nil, ErrExchangeNotImplemented
+		return nil, ccex.ErrExchangeNotImplemented
 	case Bybit:
-		return nil, ErrExchangeNotImplemented
+		return nil, ccex.ErrExchangeNotImplemented
 	case Deribit:
-		return nil, ErrExchangeNotImplemented
+		return nil, ccex.ErrExchangeNotImplemented
 	case FTX:
-		return NewFTXClient(config)
+		return ftx.NewFTXClient(config)
 	case FTXUS:
-		return nil, ErrExchangeNotImplemented
+		return nil, ccex.ErrExchangeNotImplemented
 	default:
 		return nil, fmt.Errorf("new clients error [%v]", Exchanges[exchange])
 	}

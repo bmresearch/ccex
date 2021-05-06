@@ -1,11 +1,18 @@
 package config
 
-import "github.com/murlokito/ccex/auth"
+import (
+	"fmt"
+	"github.com/murlokito/ccex/auth"
+)
 
 // Configuration holds everything necessary to
 type Configuration struct {
 	Auth       *auth.Authentication
 	SubAccount string
+}
+
+func (c Configuration) String() string {
+	return fmt.Sprintf("k: %v s: %v sub-account: %v", c.Auth.GetKey(), c.Auth.GetSecret(), c.SubAccount)
 }
 
 // GetAuth retrieves the configuration's authentication

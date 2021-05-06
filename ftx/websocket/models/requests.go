@@ -1,9 +1,5 @@
 package models
 
-import (
-	"github.com/murlokito/ccex"
-)
-
 // BaseOperation is the base of the message, all common attributes.
 type BaseOperation struct {
 	Op string `json:"op"`
@@ -25,6 +21,6 @@ type LoginMessage struct {
 // SubscribeMessage is used to request a subscription to a channel.
 type SubscribeMessage struct {
 	BaseOperation
-	Channel ccex.Channel `json:"channel"`
-	Market  ccex.Market  `json:"market"`
+	Channel string `json:"channel"`
+	Market  string `json:"market"`
 }

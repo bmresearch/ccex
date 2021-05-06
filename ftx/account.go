@@ -46,7 +46,7 @@ func (a AccountClient) PostFuturesAccountLeverageChange(symbol string, leverage 
 }
 
 // NewAccountClient returns a new configured account client
-func NewAccountClient(client *rest.Client) (*AccountClient, error){
+func NewAccountClient(client *rest.Client) (*AccountClient, error) {
 	return &AccountClient{
 		client: client,
 	}, nil

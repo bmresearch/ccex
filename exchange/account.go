@@ -1,4 +1,4 @@
-package ccex
+package exchange
 
 import "github.com/murlokito/ccex/common"
 
@@ -34,6 +34,5 @@ type (
 
 		// PostFuturesAccountLeverageChange is used to change the futures account's maximum leverage to the amount specified by `leverage` on the market specified by `symbol`.
 		PostFuturesAccountLeverageChange(symbol string, leverage int) (common.Response, error)
-
 	}
 )

@@ -2,21 +2,21 @@ package websocket
 
 const (
 	/*
-	General
-	 */
+		General
+	*/
 	Url = "wss://ftx.com/ws/"
 
 	/*
-	Public websocket channels
+		Public websocket channels
 	*/
-	Ticker = "ticker"
-	Markets = "markets"
-	Trades = "trades"
+	Ticker    = "ticker"
+	Markets   = "markets"
+	Trades    = "trades"
 	Orderbook = "orderbook"
 
 	/*
-	Private websocket channels
+		Private websocket channels
 	*/
-	Fills = "fills"
+	Fills  = "fills"
 	Orders = "orders"
 )

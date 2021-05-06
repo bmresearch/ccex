@@ -12,32 +12,32 @@ type (
 
 	// FutureData holds future data from the markets message
 	FutureData struct {
-		Name string `json:"name"`
-		Underlying string `json:"underlying"`
-		Type string `json:"type"`
-		Expiry time.Time `json:"expiry"`
-		ExpiryDescription bool `json:"expiryDescription"`
-		Expired bool `json:"expired"`
-		Perpetual bool `json:"perpetual"`
-		PostOnly bool `json:"postOnly"`
-		ImfFactor float64 `json:"imfFactor"`
-		UnderlyingDescription bool `json:"underlyingDescription"`
-		Group string `json:"group"`
-		PositionLimitWeight float64 `json:"positionLimitWeight"`
+		Name                  string    `json:"name"`
+		Underlying            string    `json:"underlying"`
+		Type                  string    `json:"type"`
+		Expiry                time.Time `json:"expiry"`
+		ExpiryDescription     bool      `json:"expiryDescription"`
+		Expired               bool      `json:"expired"`
+		Perpetual             bool      `json:"perpetual"`
+		PostOnly              bool      `json:"postOnly"`
+		ImfFactor             float64   `json:"imfFactor"`
+		UnderlyingDescription bool      `json:"underlyingDescription"`
+		Group                 string    `json:"group"`
+		PositionLimitWeight   float64   `json:"positionLimitWeight"`
 	}
 
 	// MarketData holds the data from the markets message
 	MarketData struct {
-		Name string `json:"name"`
-		Enabled bool `json:"enabled"`
+		Name           string  `json:"name"`
+		Enabled        bool    `json:"enabled"`
 		PriceIncrement float64 `json:"priceIncrement"`
-		SizeIncrement float64 `json:"sizeIncrement"`
-		Type string `json:"type"`
-		BaseCurrency string `json:"baseCurrency"`
-		QuoteCurrency string `json:"quoteCurrency"`
-		Underlying string `json:"underlying"`
-		Restricted bool `json:"restricted"`
-		FutureData `json:"future"`
+		SizeIncrement  float64 `json:"sizeIncrement"`
+		Type           string  `json:"type"`
+		BaseCurrency   string  `json:"baseCurrency"`
+		QuoteCurrency  string  `json:"quoteCurrency"`
+		Underlying     string  `json:"underlying"`
+		Restricted     bool    `json:"restricted"`
+		FutureData     `json:"future"`
 	}
 
 	// MarketMessage
@@ -57,7 +57,7 @@ type (
 	// TradeMessage
 	TradeMessage struct {
 		BaseMessage
-		Data TradeData `json:"data"`
+		Data []TradeData `json:"data"`
 	}
 
 	// OrderBookData holds the data from the markets message
@@ -72,10 +72,10 @@ type (
 
 	// TickerData holds the data from the markets message
 	TickerData struct {
-		Bid       float64   `json:"bid"`
-		Ask       float64   `json:"ask"`
-		Last      float64   `json:"last"`
-		Timestamp time.Time `json:"timestamp"`
+		Bid       float64 `json:"bid"`
+		Ask       float64 `json:"ask"`
+		Last      float64 `json:"last"`
+		Timestamp float64 `json:"timestamp"`
 	}
 
 	// TickerMessage

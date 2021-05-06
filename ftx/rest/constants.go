@@ -115,7 +115,7 @@ const (
 	IndexCandlesEndpointFormat = "/indexes/%s/candles?resolution=%s&limit=%s&start_time=%s&end_time=%s"
 
 	/*
-	 	Orders Endpoints
+		Orders Endpoints
 	*/
 
 	// The OrderEndpoint is used as GET to fetch all open orders and DELETE to cancel all orders
@@ -205,6 +205,9 @@ const (
 
 	// The FundingPaymentsEndpoint
 	FundingPaymentsEndpoint = "/funding_payments"
+	FundingPaymentsFutureEndpoint = "/funding_payments?future=%s"
+	FundingPaymentsFutureStartEndEndpoint = "/funding_payments?future=%s&start_time=%d&end_time=%d"
+
 
 	/*
 		Leveraged Tokens Endpoints

@@ -3,11 +3,11 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/murlokito/ccex/auth"
-	"github.com/murlokito/ccex/ftx"
-	"golang.org/x/time/rate"
 	"net/http"
 	"time"
+
+	"github.com/murlokito/ccex/auth"
+	"golang.org/x/time/rate"
 
 	"github.com/murlokito/ccex/config"
 	"github.com/murlokito/ccex/internal/rest"
@@ -32,17 +32,19 @@ type Client struct {
 	action must be taken before processing the request, which generally it does,
 	due to authentication, etc.
 */
-func (c *Client) Get() (*http.Response, error) {
+func (c *Client) Get(endpoint string) ([]byte, error) {
 	reservation := c.limiter.Reserve()
 
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
 
-		return nil, fmt.Errorf(ftx.ErrRateLimited, duration.Milliseconds())
+		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
-	preparedRequest := c.SignRequest("GET", c.client.BaseUrl, []byte(""))
+	reqUrl := c.client.BaseUrl + endpoint
+
+	preparedRequest := c.SignRequest("GET", endpoint, reqUrl, []byte(""))
 
 	resp, err := c.client.Submit(preparedRequest)
 	if err != nil {
@@ -50,7 +52,15 @@ func (c *Client) Get() (*http.Response, error) {
 	}
 
 	reservation.Cancel()
-	return resp, nil
+
+	var buffer []byte
+
+	_, err = resp.Body.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer, nil
 }
 
 /*
@@ -60,14 +70,14 @@ func (c *Client) Get() (*http.Response, error) {
 	action must be taken before processing the request, which generally it does,
 	due to authentication, etc.
 */
-func (c *Client) Post(data map[string]interface{}) (*http.Response, error) {
+func (c *Client) Post(endpoint string, data map[string]interface{}) ([]byte, error) {
 	reservation := c.limiter.Reserve()
 
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
 
-		return nil, fmt.Errorf(ftx.ErrRateLimited, duration.Milliseconds())
+		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
 	payload, err := json.Marshal(data)
@@ -75,7 +85,9 @@ func (c *Client) Post(data map[string]interface{}) (*http.Response, error) {
 		return nil, err
 	}
 
-	preparedRequest := c.SignRequest("POST", c.client.BaseUrl, payload)
+	reqUrl := c.client.BaseUrl + endpoint
+
+	preparedRequest := c.SignRequest("POST", endpoint, reqUrl, payload)
 
 	resp, err := c.client.Submit(preparedRequest)
 	if err != nil {
@@ -83,7 +95,15 @@ func (c *Client) Post(data map[string]interface{}) (*http.Response, error) {
 	}
 
 	reservation.Cancel()
-	return resp, nil
+
+	var buffer []byte
+
+	_, err = resp.Body.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer, nil
 }
 
 /*
@@ -93,14 +113,14 @@ func (c *Client) Post(data map[string]interface{}) (*http.Response, error) {
 	action must be taken before processing the request, which generally it does,
 	due to authentication, etc.
 */
-func (c *Client) Put(data map[string]interface{}) (*http.Response, error) {
+func (c *Client) Put(endpoint string, data map[string]interface{}) ([]byte, error) {
 	reservation := c.limiter.Reserve()
 
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
 
-		return nil, fmt.Errorf(ftx.ErrRateLimited, duration.Milliseconds())
+		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
 	payload, err := json.Marshal(data)
@@ -108,7 +128,9 @@ func (c *Client) Put(data map[string]interface{}) (*http.Response, error) {
 		return nil, err
 	}
 
-	preparedRequest := c.SignRequest("PUT", c.client.BaseUrl, payload)
+	reqUrl := c.client.BaseUrl + endpoint
+
+	preparedRequest := c.SignRequest("PUT", endpoint, reqUrl, payload)
 
 	resp, err := c.client.Submit(preparedRequest)
 	if err != nil {
@@ -116,7 +138,15 @@ func (c *Client) Put(data map[string]interface{}) (*http.Response, error) {
 	}
 
 	reservation.Cancel()
-	return resp, nil
+
+	var buffer []byte
+
+	_, err = resp.Body.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer, nil
 }
 
 /*
@@ -126,14 +156,14 @@ func (c *Client) Put(data map[string]interface{}) (*http.Response, error) {
 	action must be taken before processing the request, which generally it does,
 	due to authentication, etc.
 */
-func (c *Client) Delete(data map[string]interface{}) (*http.Response, error) {
+func (c *Client) Delete(endpoint string, data map[string]interface{}) ([]byte, error) {
 	reservation := c.limiter.Reserve()
 
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
 
-		return nil, fmt.Errorf(ftx.ErrRateLimited, duration.Milliseconds())
+		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
 	payload, err := json.Marshal(data)
@@ -141,7 +171,9 @@ func (c *Client) Delete(data map[string]interface{}) (*http.Response, error) {
 		return nil, err
 	}
 
-	preparedRequest := c.SignRequest("DELETE", c.client.BaseUrl, payload)
+	reqUrl := c.client.BaseUrl + endpoint
+
+	preparedRequest := c.SignRequest("DELETE", endpoint, reqUrl, payload)
 
 	resp, err := c.client.Submit(preparedRequest)
 	if err != nil {
@@ -149,7 +181,15 @@ func (c *Client) Delete(data map[string]interface{}) (*http.Response, error) {
 	}
 
 	reservation.Cancel()
-	return resp, nil
+
+	var buffer []byte
+
+	_, err = resp.Body.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer, nil
 }
 
 // NewClient returns a new rest client for ftx

@@ -3,7 +3,9 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/murlokito/ccex"
+	"time"
+
+	"github.com/murlokito/ccex/exchange"
 	"github.com/murlokito/ccex/internal/logger"
 	"github.com/murlokito/ccex/log"
 
@@ -15,123 +17,155 @@ import (
 // Client represents the websocket client for FTX
 type Client struct {
 	// OnMarkets holds the handler for markets messages.
-	OnMarkets   ccex.OnMarketsHandler
+	OnMarkets exchange.OnMarketsHandler
 	// OnOrderBook holds the handler for order book messages.
-	OnOrderBook ccex.OnOrderBookHandler
+	OnOrderBook exchange.OnOrderBookHandler
 	// OnTicker holds the handler for ticker messages.
-	OnTicker    ccex.OnTickerHandler
+	OnTicker exchange.OnTickerHandler
 	// OnTrade holds the handler for trade messages.
-	OnTrade     ccex.OnTradeHandler
+	OnTrade exchange.OnTradeHandler
 
 	// config holds the config used to establish the connection.
 	config *config.Configuration
 
 	// ws holds the underlying websocket connection.
-	ws     *websocket.Client
+	ws *websocket.Client
 
 	// logger holds a logger, the user can inject a logger as long as it implements the interface we specify.
 	logger log.Logger
 
 	// subscriptions holds all subscriptions across all channels and markets.
-	subscriptions map[string]string
-
-	// subscriptions holds all subscriptions with personalized handlers.
-	subscriptionHandlers []ccex.MessageDispatcher
+	subscriptions map[string][]string
 }
 
-func (c *Client) MarketHandler(handler ccex.OnMarketsHandler) {
+func (c *Client) Subscriptions() map[string][]string {
+	return c.subscriptions
+}
+
+// Connect performs the connection
+func (c *Client) Connect() {
+	c.ws.Dial()
+}
+
+// Reconnect attempts reconnection
+func (c *Client) Reconnect() error {
+	return c.ws.CloseAndReconnect()
+}
+
+// Connected returns a boolean representing the connection state
+func (c *Client) Connected() bool {
+	return c.ws.Connected()
+}
+
+// OnMarketHandler sets the handler for market messages
+func (c *Client) OnMarketHandler(handler exchange.OnMarketsHandler) {
 	c.OnMarkets = handler
 }
 
-func (c *Client) OrderBookHandler(handler ccex.OnOrderBookHandler) {
+// OnOrderBookHandler sets the handler for orderbook messages
+func (c *Client) OnOrderBookHandler(handler exchange.OnOrderBookHandler) {
 	c.OnOrderBook = handler
 }
 
-func (c *Client) TradeHandler(handler ccex.OnTradeHandler) {
+// OnTradesHandler sets the handler for trade messages
+func (c *Client) OnTradesHandler(handler exchange.OnTradeHandler) {
 	c.OnTrade = handler
 }
 
-func (c *Client) TickerHandler(handler ccex.OnTickerHandler) {
+// OnTickerHandler sets the handler for ticker messages
+func (c *Client) OnTickerHandler(handler exchange.OnTickerHandler) {
 	c.OnTicker = handler
 }
 
 // OnMessage is called by the underlying websocket client whenever it reads a message, similar to event-based actions.
-func (c Client) OnMessage(message []byte) {
-	var v map[string]string
+func (c Client) OnMessage(message []byte) error {
+	var v map[string]interface{}
 
-	err := json.Unmarshal(message, v)
+	err := json.Unmarshal(message, &v)
 	if err != nil {
-		logger.Error(fmt.Errorf(""))
+		logger.Error(err.Error())
 	}
 
-	channel, ok := v["channel"]
+	msgType, ok := v["type"]
+	if !ok {
+		return fmt.Errorf("could not get message type")
+	}
+
+	if msgType == "error" {
+		code, ok := v["code"]
+		if !ok {
+			return fmt.Errorf("could not get message code")
+		}
+
+		msg, ok := v["msg"]
+		if !ok {
+			return fmt.Errorf("could not get message")
+		}
+
+		return fmt.Errorf("code: %v type: %v msg: %v", code, msgType, msg)
+	}
+	var (
+		channel, market interface{}
+	)
+
+	channel, ok = v["channel"]
 	if !ok {
 		c.logger.Error("Could not get message channel")
-		return
+		return fmt.Errorf("could not get message channel")
 	}
 
-	market, ok := v["market"]
+	market, ok = v["market"]
 	if !ok {
-		c.logger.Error("Could not get message channel")
-		return
+		c.logger.Error("Could not get message market")
+		return fmt.Errorf("could not get message market")
 	}
 
-	if handler := c.GetHandlerFor(channel, market); handler != nil {
-		handler(v)
-		return
+	if msgType == "subscribed" || msgType == "unsubscribed" {
+		c.logger.Infof("Successfully %v to channel {%v} for market {%v}", msgType, channel, market)
+		return nil
 	}
 
 	switch channel {
-		case Markets:
-			if c.OnMarkets != nil {
-				var markets models.MarketMessage
-				err := json.Unmarshal(message, markets)
-				if err != nil {
-					logger.Error(fmt.Errorf(""))
-				}
-				c.OnMarkets(markets)
+	case Markets:
+		if c.OnMarkets != nil {
+			var markets models.MarketMessage
+			err = json.Unmarshal(message, &markets)
+			if err != nil {
+				return err
 			}
-			break
-		case Trades:
-			if c.OnTrade != nil {
-				var trades models.TradeMessage
-				err := json.Unmarshal(message, trades)
-				if err != nil {
-					logger.Error(fmt.Errorf(""))
-				}
-				c.OnTrade(trades)
-			}
-			break
-		case Orderbook:
-			if c.OnOrderBook != nil {
-				var orderbook models.OrderBookMessage
-				err := json.Unmarshal(message, orderbook)
-				if err != nil {
-					logger.Error(fmt.Errorf(""))
-				}
-				c.OnOrderBook(orderbook)
-			}
-			break
-		case Ticker:
-			if c.OnTicker != nil {
-				var ticker models.TickerMessage
-				err := json.Unmarshal(message, ticker)
-				if err != nil {
-					logger.Error(fmt.Errorf(""))
-				}
-				c.OnTicker(ticker)
-			}
-			break
-	}
-
-}
-
-// GetHandlerFor fetches the personalized handler for a channel and market.
-func (c Client) GetHandlerFor(channel string, market string) ccex.OnMessageHandler {
-	for _, dispatcher := range c.subscriptionHandlers {
-		if dispatcher.Channel == channel && market == dispatcher.Market {
-			return dispatcher.Handler
+			c.OnMarkets(markets)
 		}
+		break
+	case Trades:
+		if c.OnTrade != nil {
+			var trades models.TradeMessage
+			err = json.Unmarshal(message, &trades)
+			if err != nil {
+				return err
+			}
+			c.OnTrade(trades)
+		}
+		break
+	case Orderbook:
+		if c.OnOrderBook != nil {
+			var orderbook models.OrderBookMessage
+			err = json.Unmarshal(message, &orderbook)
+			if err != nil {
+				return err
+			}
+			c.OnOrderBook(orderbook)
+		}
+		break
+	case Ticker:
+		if c.OnTicker != nil {
+			var ticker models.TickerMessage
+			err = json.Unmarshal(message, &ticker)
+			if err != nil {
+				return err
+			}
+			c.OnTicker(ticker)
+		}
+		break
 	}
 	return nil
 }
@@ -155,7 +189,7 @@ func (c Client) Authenticate() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = c.ws.WriteMessage(2, message)
+	err = c.ws.WriteMessage(1, message)
 	if err != nil {
 		return nil, err
 	}
@@ -178,62 +212,46 @@ func (c Client) Subscribe(channel string, market string) error {
 	if err != nil {
 		return err
 	}
-	err = c.ws.WriteMessage(2, message)
+
+	err = c.ws.WriteMessage(1, message)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-// SubscribeWithHandler subscribes to a websocket channel.
-func (c Client) SubscribeWithHandler(channel string, market string, handler ccex.OnMessageHandler) error {
-
-	data := models.SubscribeMessage{
-		BaseOperation: models.BaseOperation{
-			Op: "subscribe",
-		},
-		Channel: channel,
-		Market:  market,
-	}
-
-	message, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	err = c.ws.WriteMessage(2, message)
-	if err != nil {
-		return err
-	}
-
-	msgDispatcher := ccex.MessageDispatcher{
-		Channel: channel,
-		Market:  market,
-		Handler: handler,
-	}
-	c.subscriptionHandlers = append(c.subscriptionHandlers, msgDispatcher)
+	c.subscriptions[channel] = append(c.subscriptions[channel], market)
 
 	return nil
 }
 
 // NewClient returns a configured websocket client for FTX
-func NewClient(config *config.Configuration) (*Client, error) {
-	ws, err := websocket.New(Url)
+func NewClient(config *config.Configuration, marketsHandler exchange.OnMarketsHandler,
+	tickerHandler exchange.OnTickerHandler, tradesHandler exchange.OnTradeHandler, orderbookHandler exchange.OnOrderBookHandler) (*Client, error) {
+	clientLogger := logger.NewLogger()
+	ws, err := websocket.New(Url, clientLogger)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &Client{
-		config:               config,
-		ws:                   ws,
-		subscriptionHandlers: []ccex.MessageDispatcher{},
+		config:        config,
+		ws:            ws,
+		logger:        clientLogger,
+		subscriptions: map[string][]string{},
+		OnTicker:      tickerHandler,
+		OnTrade:       tradesHandler,
+		OnOrderBook:   orderbookHandler,
+		OnMarkets:     marketsHandler,
 	}
 
-	if config.GetAuth() != nil {
-		ws.OnConnected = client.Authenticate
+	if config != nil {
+		if config.GetAuth() != nil {
+			ws.OnConnected = client.Authenticate
+		}
 	}
 
 	ws.OnMessage = client.OnMessage
+
+	ws.SetKeepAliveTimeout(15 * time.Second)
 
 	return client, nil
 }

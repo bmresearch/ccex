@@ -25,7 +25,7 @@ func TestConfig(t *testing.T) {
 
 func TestSetConfig(t *testing.T) {
 	config := Configuration{
-		Auth: nil,
+		Auth:       nil,
 		SubAccount: "none",
 	}
 	authInfo := &auth.Authentication{

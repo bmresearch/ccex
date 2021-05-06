@@ -7,6 +7,4 @@ const (
 	LimitOrder = iota
 	MarketOrder
 	TriggerOrder
-	)
-
-
+)

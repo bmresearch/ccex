@@ -15,14 +15,13 @@ import (
 )
 
 // OnMessageHandler is a handler that is dispatched when the client reads a message from the websocket.
-type OnMessageHandler func(message []byte)
+type OnMessageHandler func(message []byte) error
 
 /*
 OnConnectedHandler is a handler that is dispatched when the client reads a message from the websocket.
 This can be the authentication message and/or something else.
 */
 type OnConnectedHandler func() ([]byte, error)
-
 
 // ErrNotConnected is returned when the application read/writes
 // a message and the connection is closed
@@ -69,31 +68,31 @@ type Client struct {
 	logger log.Logger
 
 	// mu is the mutex to prevent issues associated with goroutine concurrency.
-	mu        sync.RWMutex
+	mu sync.RWMutex
 
 	// reqHeader holds the http request header to be used during connection.
 	reqHeader http.Header
 
 	// httpResp holds the http response that is received from the connection
-	httpResp  *http.Response
+	httpResp *http.Response
 
 	// keepAliveTimeout is an interval for sending ping/pong messages disabled if 0.
 	keepAliveTimeout time.Duration
 
 	// url holds the url for the connection.
-	url      string
+	url string
 
 	// dialErr is used to hold a possible error caught when dialing the server.
 	dialErr error
 
 	// verbose is used to define if the client should log actions verbosely and/or log more actions.
-	verbose   bool
+	verbose bool
 
 	// connected is used to define if the client has an established connection.
 	connected bool
 
 	// connected is used to define if the client's connection is closed.
-	closed    bool
+	closed bool
 }
 
 // CloseAndReconnect will try to reconnect.
@@ -118,6 +117,14 @@ func (c *Client) GetBackoff() *backoff.Backoff {
 		Factor: c.RecIntvlFactor,
 		Jitter: true,
 	}
+}
+
+// SetKeepAliveTimeout sets the interval for the keep alive message
+func (c *Client) SetKeepAliveTimeout(interval time.Duration) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	c.keepAliveTimeout = interval
 }
 
 // Connect performs the connection. This function should be executed by a goroutine.
@@ -154,13 +161,13 @@ func (c *Client) Connect() {
 
 		if err == nil {
 			if !c.GetVerbose() {
-				c.logger.Info("Connection was successfully established with %s", c.url)
+				c.logger.Info("Connection was successfully established with ", c.url)
 
 				if c.OnConnected != nil {
 					message, err := c.OnConnected()
 					if err == nil {
 						err = c.WriteMessage(1, message)
-						if !c.getVerbose() && err != nil {
+						if c.getVerbose() && err != nil {
 							c.logger.Error(err.Error())
 
 							// In case connection ended for some reason.
@@ -176,22 +183,34 @@ func (c *Client) Connect() {
 				}
 
 				if c.getKeepAliveTimeout() != 0 {
+					c.logger.Info("Keeping connection alive with timeout ", c.getKeepAliveTimeout())
 					c.keepAlive()
+				}
+
+				err = c.ReadMessages()
+				if err != nil {
+					c.logger.Error(err.Error())
+				}
+
+				if err == ErrNotConnected {
+					if err := c.CloseAndReconnect(); err != nil {
+						c.logger.Error(err.Error())
+					}
+					return
 				}
 			}
 
 			return
 		}
 
-		if !c.getVerbose() {
+		if c.getVerbose() {
 			c.logger.Error(err.Error())
-			c.logger.Info("Will try again in", nextReconnect, "seconds.")
+			c.logger.Info("Will try again in ", nextReconnect, " seconds.")
 		}
 
 		time.Sleep(nextReconnect)
 	}
 }
-
 
 // Connected returns the WebSocket connection state
 func (c *Client) Connected() bool {
@@ -249,6 +268,25 @@ func (c *Client) Close() error {
 
 	c.setConnected(false)
 	return nil
+}
+
+// ReadMessages reads messages while the connection is active
+func (c *Client) ReadMessages() error {
+	for {
+		if c.Closed() {
+			return ErrNotConnected
+		}
+
+		_, msg, err := c.ReadMessage()
+		if err != nil {
+			return err
+		}
+
+		err = c.OnMessage(msg)
+		if err != nil {
+			c.logger.Error(err.Error())
+		}
+	}
 }
 
 // ReadMessage is a helper method for reading a message from the underlying connection.
@@ -326,24 +364,8 @@ func (c *Client) ReadJSON(v interface{}) (err error) {
 	return err
 }
 
-// setUrl sets the url for the underlying connection.
-func (c *Client) setUrl(url string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.url = url
-}
-
-// setReqHeader sets the http request header for the underlying connection.
-func (c *Client) setReqHeader(reqHeader http.Header) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.reqHeader = reqHeader
-}
-
 // validateUrl validates passed rawUrl.
-func (c *Client) validateUrl(rawUrl string) (string, error) {
+func validateUrl(rawUrl string) (string, error) {
 	if rawUrl == "" {
 		return "", errors.New("dial: url cannot be empty")
 	}
@@ -427,16 +449,9 @@ func (c *Client) getHandshakeTimeout() time.Duration {
 // The URL url specifies the host and request URI. Use requestHeader to specify
 // the origin (Origin), sub-protocols (Sec-WebSocket-Protocol) and cookies
 // (Cookie).
-func (c *Client) Dial(url string, reqHeader http.Header) {
-	urlStr, err := c.validateUrl(url)
-
-	if err != nil {
-		c.logger.Fatal("Dial: %v", err)
-	}
+func (c *Client) Dial() {
 
 	// Config
-	c.setUrl(urlStr)
-	c.setReqHeader(reqHeader)
 	c.setDefaultRecIntvlMin()
 	c.setDefaultRecIntvlMax()
 	c.setDefaultRecIntvlFactor()
@@ -500,6 +515,10 @@ func (c *Client) keepAlive() {
 		defer ticker.Stop()
 
 		for {
+			if c.getVerbose() {
+				c.logger.Info("Writing ping message")
+			}
+
 			if err := c.writeControlPingMessage(); err != nil {
 				c.logger.Error(err.Error())
 			}
@@ -518,12 +537,17 @@ func (c *Client) keepAlive() {
 }
 
 // New returns a new configured websocket client for the passed url.
-func New(url string) (*Client, error) {
-	client := &Client{
-		url:  url,
+func New(url string, logger log.Logger) (*Client, error) {
+
+	validatedUrl, err := validateUrl(url)
+	if err != nil {
+		return nil, err
 	}
 
-	client.Connect()
+	client := &Client{
+		url:    validatedUrl,
+		logger: logger,
+	}
 
 	return client, nil
 }

@@ -68,9 +68,6 @@ func (r *ResponseForPositions) GetResult() interface{} {
 Wallet requests responses
 */
 
-
-
-
 /*
 Market requests responses
 */
@@ -164,6 +161,3 @@ type ResponseForTrades struct {
 func (r *ResponseForTrades) GetResult() interface{} {
 	return r.Result
 }
-
-
-

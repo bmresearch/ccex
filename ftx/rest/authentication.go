@@ -8,18 +8,16 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-
 )
 
 // SignRequest is used to sign the request with the necessary information
-func (c *Client) SignRequest(method string, endpoint string, body []byte) *http.Request {
+func (c *Client) SignRequest(method, endpoint, url string, body []byte) *http.Request {
 	ts := strconv.FormatInt(time.Now().UTC().Unix()*1000, 10)
 
 	signaturePayload := ts + method + endpoint + string(body)
 	signature := c.Sign(signaturePayload)
 
-	req, _ := http.NewRequest(method, endpoint, bytes.NewBuffer(body))
+	req, _ := http.NewRequest(method, url, bytes.NewBuffer(body))
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("FTX-KEY", c.config.Auth.Key)

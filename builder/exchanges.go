@@ -1,4 +1,4 @@
-package ccex
+package builder
 
 const (
 	Binance = iota

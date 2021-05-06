@@ -23,10 +23,10 @@ type Position struct {
 
 // Account holds the necessary information to represent the account information
 type Account struct {
-	BackstopProvider             bool    `json:"backstopProvider"`
-	Collateral                   float64 `json:"collateral"`
-	FreeCollateral               float64 `json:"freeCollateral"`
-	InitialMarginRequirement     float64 `json:"initialMarginRequirement"`
+	BackstopProvider             bool       `json:"backstopProvider"`
+	Collateral                   float64    `json:"collateral"`
+	FreeCollateral               float64    `json:"freeCollateral"`
+	InitialMarginRequirement     float64    `json:"initialMarginRequirement"`
 	Leverage                     int        `json:"leverage"`
 	Liquidating                  bool       `json:"liquidating"`
 	MaintenanceMarginRequirement float64    `json:"maintenanceMarginRequirement"`

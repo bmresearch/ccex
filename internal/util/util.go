@@ -23,6 +23,6 @@ func ProcessResponse(resp *http.Response, result interface{}) error {
 }
 
 // FormatUrl formats a url according to the passed format
-func FormatUrl(baseUrl, format, endpoint string, params ...string) string{
+func FormatUrl(baseUrl, format, endpoint string, params ...string) string {
 	return fmt.Sprintf("%s%s", baseUrl, fmt.Sprintf(format, endpoint, params))
 }
