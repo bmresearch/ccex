@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/murlokito/ccex/auth"
+	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
 	"github.com/murlokito/ccex/config"
@@ -38,29 +39,23 @@ func (c *Client) Get(endpoint string) ([]byte, error) {
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
-
 		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
 	reqUrl := c.client.BaseUrl + endpoint
-
-	preparedRequest := c.SignRequest("GET", endpoint, reqUrl, []byte(""))
-
-	resp, err := c.client.Submit(preparedRequest)
+	err := c.PrepareRequest(http.MethodGet, endpoint, reqUrl, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.client.Submit()
+	if err != nil {
+		return nil, errors.Wrap(err, "error submitting request")
 	}
 
 	reservation.Cancel()
 
-	var buffer []byte
-
-	_, err = resp.Body.Read(buffer)
-	if err != nil {
-		return nil, err
-	}
-
-	return buffer, nil
+	return c.client.Response.Body(), nil
 }
 
 /*
@@ -76,7 +71,6 @@ func (c *Client) Post(endpoint string, data map[string]interface{}) ([]byte, err
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
-
 		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
@@ -86,24 +80,19 @@ func (c *Client) Post(endpoint string, data map[string]interface{}) ([]byte, err
 	}
 
 	reqUrl := c.client.BaseUrl + endpoint
-
-	preparedRequest := c.SignRequest("POST", endpoint, reqUrl, payload)
-
-	resp, err := c.client.Submit(preparedRequest)
+	err = c.SignRequest(http.MethodPost, endpoint, reqUrl, payload)
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.client.Submit()
+	if err != nil {
+		return nil, errors.Wrap(err, "error submitting request")
 	}
 
 	reservation.Cancel()
 
-	var buffer []byte
-
-	_, err = resp.Body.Read(buffer)
-	if err != nil {
-		return nil, err
-	}
-
-	return buffer, nil
+	return c.client.Response.Body(), nil
 }
 
 /*
@@ -119,7 +108,6 @@ func (c *Client) Put(endpoint string, data map[string]interface{}) ([]byte, erro
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
-
 		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
@@ -129,24 +117,19 @@ func (c *Client) Put(endpoint string, data map[string]interface{}) ([]byte, erro
 	}
 
 	reqUrl := c.client.BaseUrl + endpoint
-
-	preparedRequest := c.SignRequest("PUT", endpoint, reqUrl, payload)
-
-	resp, err := c.client.Submit(preparedRequest)
+	err = c.SignRequest(http.MethodPut, endpoint, reqUrl, payload)
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.client.Submit()
+	if err != nil {
+		return nil, errors.Wrap(err, "error submitting request")
 	}
 
 	reservation.Cancel()
 
-	var buffer []byte
-
-	_, err = resp.Body.Read(buffer)
-	if err != nil {
-		return nil, err
-	}
-
-	return buffer, nil
+	return c.client.Response.Body(), nil
 }
 
 /*
@@ -162,7 +145,6 @@ func (c *Client) Delete(endpoint string, data map[string]interface{}) ([]byte, e
 	if !reservation.OK() {
 		duration := reservation.DelayFrom(time.Now())
 		reservation.Cancel()
-
 		return nil, fmt.Errorf(ErrRateLimited, duration.Milliseconds())
 	}
 
@@ -172,34 +154,30 @@ func (c *Client) Delete(endpoint string, data map[string]interface{}) ([]byte, e
 	}
 
 	reqUrl := c.client.BaseUrl + endpoint
-
-	preparedRequest := c.SignRequest("DELETE", endpoint, reqUrl, payload)
-
-	resp, err := c.client.Submit(preparedRequest)
+	err = c.SignRequest(http.MethodDelete, endpoint, reqUrl, payload)
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.client.Submit()
+	if err != nil {
+		return nil, errors.Wrap(err, "error submitting request")
 	}
 
 	reservation.Cancel()
 
-	var buffer []byte
-
-	_, err = resp.Body.Read(buffer)
-	if err != nil {
-		return nil, err
-	}
-
-	return buffer, nil
+	return c.client.Response.Body(), nil
 }
 
 // NewClient returns a new rest client for ftx
 func NewClient(cfg *config.Configuration) (*Client, error) {
-	rc, err := rest.New(cfg, ApiUrl)
+	rc, err := rest.New(ApiUrl)
 	if err != nil {
 		return &Client{}, err
 	}
 
 	client := &Client{
+		config:  cfg,
 		client:  rc,
 		limiter: rate.NewLimiter(30, 5),
 	}

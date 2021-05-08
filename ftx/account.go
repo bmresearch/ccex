@@ -1,47 +1,26 @@
 package ftx
 
 import (
-	"github.com/murlokito/ccex/common"
 	"github.com/murlokito/ccex/ftx/rest"
+	models "github.com/murlokito/ccex/models/rest"
 )
 
 type (
-
 	// AccountClient represents the client for the FTX Account API.
 	AccountClient struct {
 		client *rest.Client
 	}
 )
 
-func (a AccountClient) GetAccount() (common.Response, error) {
+func (a AccountClient) GetPositions(req *models.RequestForPositions) (*models.ResponseForPositions, error) {
 	panic("implement me")
 }
 
-func (a AccountClient) GetPositions(showAvgPrice bool) (common.Response, error) {
+func (a AccountClient) PostAccountLeverageChange(req *models.RequestForAccountLeverageChange) (*models.ResponseForAccountLeverageChange, error) {
 	panic("implement me")
 }
 
-func (a AccountClient) GetSubAccounts() (common.Response, error) {
-	panic("implement me")
-}
-
-func (a AccountClient) GetSubAccountBalance(subAccount string) (common.Response, error) {
-	panic("implement me")
-}
-
-func (a AccountClient) PostSubAccountNameChange(subAccountName, newSubAccountName string) (common.Response, error) {
-	panic("implement me")
-}
-
-func (a AccountClient) PostSubAccountAssetTransfer(coin, sourceSubAccount, targetSubAccount string, size int) (common.Response, error) {
-	panic("implement me")
-}
-
-func (a AccountClient) PostAccountLeverageChange(leverage int) (common.Response, error) {
-	panic("implement me")
-}
-
-func (a AccountClient) PostFuturesAccountLeverageChange(symbol string, leverage int) (common.Response, error) {
+func (a AccountClient) PostFuturesAccountLeverageChange(req *models.RequestForFuturesAccountLeverageChange) (*models.ResponseForFuturesAccountLeverageChange, error) {
 	panic("implement me")
 }
 

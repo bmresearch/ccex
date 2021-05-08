@@ -1,9 +1,8 @@
 package ftx
 
 import (
-	"github.com/murlokito/ccex/common"
 	"github.com/murlokito/ccex/ftx/rest"
-	"time"
+	models "github.com/murlokito/ccex/models/rest"
 )
 
 type (
@@ -14,47 +13,35 @@ type (
 	}
 )
 
-func (w WalletClient) GetWalletCoins() (common.Response, error) {
+func (w WalletClient) GetWalletBalances(req *models.RequestForWalletBalances) (models.ResponseForWalletBalances, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetWalletBalances() (common.Response, error) {
+func (w WalletClient) GetDepositAddress(req *models.RequestForDepositAddress) (models.ResponseForDepositAddress, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetAllWalletBalances() (common.Response, error) {
+func (w WalletClient) GetWalletDepositHistory(req *models.RequestForWalletDepositHistory) (models.ResponseForWalletDepositHistory, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetDepositAddress(coin, method string) (common.Response, error) {
+func (w WalletClient) GetWalletWithdrawalHistory(req *models.RequestForWalletWithdrawalHistory) (models.ResponseForWalletWithdrawalHistory, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetWalletDepositHistory(limit int, start, end time.Time) (common.Response, error) {
+func (w WalletClient) GetSavedAddresses(req *models.RequestForSavedAddresses) (models.ResponseForSavedAddresses, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetWalletWithdrawalHistory(limit int, start, end time.Time) (common.Response, error) {
+func (w WalletClient) PostCreateSavedAddress(req *models.RequestForSavedAddressCreation) (models.ResponseForSavedAddressCreation, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetWalletAirdropHistory(limit int, start, end time.Time) (common.Response, error) {
+func (w WalletClient) DeleteSavedAddress(req *models.RequestForSavedAddressDeletion) (models.ResponseForSavedAddressDeletion, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetSavedAddresses(coin string) (common.Response, error) {
-	panic("implement me")
-}
-
-func (w WalletClient) PostCreateSavedAddress(coin, address, addressName, tag string, isPrimeTrust bool) (common.Response, error) {
-	panic("implement me")
-}
-
-func (w WalletClient) DeleteSavedAddress(addressId int) (common.Response, error) {
-	panic("implement me")
-}
-
-func (w WalletClient) PostWalletWithdrawal(coin, address, tag, password, code string, size int) (common.Response, error) {
+func (w WalletClient) PostWalletWithdrawal(req *models.RequestForWalletWithdrawal) (models.ResponseForWalletWithdrawal, error) {
 	panic("implement me")
 }
 

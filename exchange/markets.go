@@ -1,8 +1,7 @@
 package exchange
 
 import (
-	"github.com/murlokito/ccex/common"
-	"time"
+	"github.com/murlokito/ccex/models/rest"
 )
 
 type (
@@ -13,27 +12,27 @@ type (
 			it happens when it is strictly a futures exchange or there are no distinct endpoints for markets and futures.
 			It is so the interface is implemented.
 		*/
-		GetMarkets() (common.Response, error)
+		GetMarkets(req *rest.RequestForMarkets) (*rest.ResponseForMarkets, error)
 
 		/*
-			GetMarket is used to fetch information related to the market specified by `symbol`.
+			GetMarket is used to fetch information related to the market specified by `Symbol`.
 			In certain cases this method and the GetFuture method have the same behavior,
 			it happens when it is strictly a futures exchange or there are no distinct endpoints for markets and futures.
 			It is so the interface is implemented.
 		*/
-		GetMarket(symbol string) (common.Response, error)
+		GetMarket(req *rest.RequestForMarket) (*rest.ResponseForMarket, error)
 
-		// GetOrderBook fetches the order book for the passed `symbol`.
-		GetOrderBook(symbol string) (common.Response, error)
+		// GetOrderBook fetches the order book for the passed `Market`.
+		GetOrderBook(req *rest.RequestForOrderBook) (*rest.ResponseForOrderBook, error)
 
-		// GetTrades fetches the trades for the passed `symbol`.
-		GetTrades(symbol string) (common.Response, error)
+		// GetTrades fetches the trades for the passed `Symbol`.
+		GetTrades(req *rest.RequestForTrades) (*rest.ResponseForTrades, error)
 
 		/*
-			GetCandles fetches OHLC data for the market specified by `symbol`
-			with a maximum specified by `limit` for the passed `symbol` with the specified `resolution`.
-			Optionally provide `start` and `end` to request a specific period.
+			GetCandles fetches OHLC data for the market specified by `Market`
+			with a maximum specified by `Limit` for the passed `Market` with the specified `Resolution`.
+			Optionally provide `Start` and `End` to request a specific period.
 		*/
-		GetCandles(symbol string, resolution, limit int, start, end time.Time) (common.Response, error)
+		GetCandles(req *rest.RequestForCandles) (*rest.ResponseForCandles, error)
 	}
 )

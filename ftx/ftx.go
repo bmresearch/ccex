@@ -10,7 +10,7 @@ import (
 // NewFTXClient returns a new configured client for FTX, to be used with the agnostic builder.
 func NewFTXClient(config *config.Configuration, marketsHandler exchange.OnMarketsHandler,
 	tickerHandler exchange.OnTickerHandler, tradesHandler exchange.OnTradeHandler,
-	orderBookHandler exchange.OnOrderBookHandler) (*exchange.ExchangeClient, error) {
+	orderBookHandler exchange.OnOrderBookHandler) (*exchange.Client, error) {
 
 	// Initialize the base http client that takes care of authentication and rate limiting
 	client, err := rest.NewClient(config)
@@ -20,6 +20,11 @@ func NewFTXClient(config *config.Configuration, marketsHandler exchange.OnMarket
 
 	// Initialize the clients for the specific API segments
 	accountClient, err := NewAccountClient(client)
+	if err != nil {
+		return nil, err
+	}
+
+	subAccountClient, err := NewSubAccountClient(client)
 	if err != nil {
 		return nil, err
 	}
@@ -34,27 +39,7 @@ func NewFTXClient(config *config.Configuration, marketsHandler exchange.OnMarket
 		return nil, err
 	}
 
-	conversionClient, err := NewConversionClient(client)
-	if err != nil {
-		return nil, err
-	}
-
-	marginClient, err := NewMarginClient(client)
-	if err != nil {
-		return nil, err
-	}
-
 	marketsClient, err := NewMarketsClient(client)
-	if err != nil {
-		return nil, err
-	}
-
-	fillsClient, err := NewFillsClient(client)
-	if err != nil {
-		return nil, err
-	}
-
-	fundingClient, err := NewFundingClient(client)
 	if err != nil {
 		return nil, err
 	}
@@ -80,18 +65,15 @@ func NewFTXClient(config *config.Configuration, marketsHandler exchange.OnMarket
 		return nil, err
 	}
 
-	return &exchange.ExchangeClient{
-		Account:   accountClient,
-		Wallet:    walletClient,
-		Conversion: conversionClient,
-		Orders:    ordersClient,
-		Markets: marketsClient,
-		Fills: fillsClient,
-		Funding: fundingClient,
-		Spot: spotClient,
-		Futures: futuresClient,
-		Margin: marginClient,
-		Options: optionsClient,
-		Websocket: wsClient,
+	return &exchange.Client{
+		Account:    accountClient,
+		SubAccount: subAccountClient,
+		Wallet:     walletClient,
+		Orders:     ordersClient,
+		Markets:    marketsClient,
+		Spot:       spotClient,
+		Futures:    futuresClient,
+		Options:    optionsClient,
+		Streaming:  wsClient,
 	}, nil
 }

@@ -1,4 +1,4 @@
-package models
+package ws
 
 import "time"
 
@@ -40,7 +40,7 @@ type (
 		FutureData     `json:"future"`
 	}
 
-	// MarketMessage
+	// MarketMessage holds a message from the market channel
 	MarketMessage struct {
 		BaseMessage
 		Data MarketData `json:"data"`
@@ -54,7 +54,7 @@ type (
 		Liquidation bool    `json:"liquidation"`
 	}
 
-	// TradeMessage
+	// TradeMessage holds a message from the trades channel
 	TradeMessage struct {
 		BaseMessage
 		Data []TradeData `json:"data"`
@@ -64,7 +64,7 @@ type (
 	OrderBookData struct {
 	}
 
-	// OrderBookMessage
+	// OrderBookMessage holds a message from the orderbook channel
 	OrderBookMessage struct {
 		BaseMessage
 		Data OrderBookData `json:"data"`
@@ -78,7 +78,7 @@ type (
 		Timestamp float64 `json:"timestamp"`
 	}
 
-	// TickerMessage
+	// TickerMessage holds a message from the ticker channel
 	TickerMessage struct {
 		BaseMessage
 		Data TickerData `json:"data"`

@@ -1,11 +1,11 @@
 package exchange
 
 import (
-	"github.com/murlokito/ccex/common"
-	"time"
+	"github.com/murlokito/ccex/models/rest"
 )
 
 type (
+	// Futures interface specifies functionality to interact with a Futures API.
 	Futures interface {
 		/*
 			GetFutures fetches all the available futures markets.
@@ -13,7 +13,7 @@ type (
 			it happens when it is strictly a futures exchange or there are no distinct endpoints for markets and futures.
 			It is so the interface is implemented.
 		*/
-		GetFutures() (common.Response, error)
+		GetFutures(futures *rest.RequestForFutures) (*rest.ResponseForFutures, error)
 
 		/*
 			GetFuture is used to fetch information related to the futures market specified by `future`.
@@ -21,25 +21,25 @@ type (
 			it happens when it is strictly a futures exchange or there are no distinct endpoints for markets and futures.
 			It is so the interface is implemented.
 		*/
-		GetFuture(future string) (common.Response, error)
+		GetFuture(future *rest.RequestForFuture) (*rest.ResponseForFuture, error)
 
-		// GetFutureStats fetches the stats associated with the future specified by `future`.
-		GetFutureStats(future string) (common.Response, error)
+		// GetOpenInterest fetches the stats associated with the future specified by `future`.
+		GetOpenInterest(stats *rest.RequestForOpenInterest)(*rest.ResponseForFutureStats, error)
 
 		// GetFundingRate fetches the funding rates for the future specified by `future`.
-		GetFundingRate(future string, start, end time.Time) (common.Response, error)
+		GetFundingRate(rates *rest.RequestForFundingRates) (*rest.ResponseForFundingRates, error)
 
 		// GetIndexWeights fetches the weights of the index specified by `index`.
-		GetIndexWeights(index string) (common.Response, error)
+		GetIndexWeights(weights *rest.RequestForIndexWeights) (*rest.ResponseForIndexWeights, error)
 
 		// GetExpiredFutures fetches futures that have expired.
-		GetExpiredFutures() (common.Response, error)
+		GetExpiredFutures(futures *rest.RequestForExpiredFutures) (*rest.ResponseForExpiredFutures, error)
 
 		/*
 			GetHistoricalIndex fetches OHLC data for the index specified by `index`
 			with a maximum specified by `limit` for the passed `symbol` with the specified `resolution`.
 			Optionally provide `start` and `end` to request a specific period.
 		*/
-		GetHistoricalIndex(index string, resolution, limit int, start, end time.Time) (common.Response, error)
+		GetHistoricalIndex(req *rest.RequestForHistoricalIndex) (*rest.ResponseForHistoricalIndex, error)
 	}
 )

@@ -1,19 +1,21 @@
 package exchange
 
-import "github.com/murlokito/ccex/ftx/websocket/models"
+import (
+	"github.com/murlokito/ccex/models/ws"
+)
 
 type (
 	// OnMarketsHandler is called whenever the websocket client receives a market message.
-	OnMarketsHandler func(data models.MarketMessage)
+	OnMarketsHandler func(data ws.MarketMessage)
 
 	// OnOrderBookHandler is called whenever the websocket client receives an order book message.
-	OnOrderBookHandler func(data models.OrderBookMessage)
+	OnOrderBookHandler func(data ws.OrderBookMessage)
 
 	// OnTickerHandler is called whenever the websocket client receives a ticker message.
-	OnTickerHandler func(data models.TickerMessage)
+	OnTickerHandler func(data ws.TickerMessage)
 
 	// OnTradeHandler is called whenever the websocket client receives a trade message.
-	OnTradeHandler func(data models.TradeMessage)
+	OnTradeHandler func(data ws.TradeMessage)
 
 	// OnMessageHandler is a type defined to represent a handler called for a certain channel and market combination.
 	OnMessageHandler func(message interface{})

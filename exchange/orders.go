@@ -1,22 +1,22 @@
 package exchange
 
 import (
-	"github.com/murlokito/ccex/common"
-	"time"
+	"github.com/murlokito/ccex/models/rest"
 )
 
 type (
 	// Orders specifies functionality for the orders API
 	Orders interface {
 		// GetOpenOrders fetches the open orders. Optionally pass `market` to only fetch orders from a single market.
-		GetOpenOrders(market string) (common.Response, error)
+		GetOpenOrders(req *rest.RequestForOpenOrders) (rest.ResponseForOpenOrders, error)
 
 		/*
 			GetOrderHistory fetches the orders history.
 			Optionally pass `market` to only fetch orders from a single market and `start` and `end` for orders within a period.
 		*/
-		GetOrderHistory(market string, limit int, start, end time.Time) (common.Response, error)
+		GetOrderHistory(req *rest.RequestForOrderHistory) (rest.ResponseForOrderHistory, error)
 
+		/* TODO: Add models to `../models/` package for each of these endpoints
 		GetOpenTriggerOrders(market, triggerOrderType string) (common.Response, error)
 
 		GetTriggerOrderHistory(market, side, triggerOrderType, orderType string, limit int, start, end time.Time) (common.Response, error)
@@ -37,6 +37,6 @@ type (
 
 		DeleteTriggerOrder(orderId int) (common.Response, error)
 
-		DeleteAllOrders(market string, conditionalOrdersOnly, limitOrdersOnly bool) (common.Response, error)
+		DeleteAllOrders(market string, conditionalOrdersOnly, limitOrdersOnly bool) (common.Response, error)*/
 	}
 )

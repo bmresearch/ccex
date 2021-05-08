@@ -1,26 +1,30 @@
 package rest
 
 import (
-	"net/http"
-
-	"github.com/murlokito/ccex/config"
+	"github.com/valyala/fasthttp"
 )
 
+// Client is the base http client
 type Client struct {
-	http.Client
-	BaseUrl string
+	BaseUrl  string
+	Request  *fasthttp.Request
+	Response *fasthttp.Response
+	client   fasthttp.Client
 }
 
 // Submit submits an HTTP request.
-func (c *Client) Submit(request *http.Request) (*http.Response, error) {
-	resp, err := c.Client.Do(request)
-	return resp, err
+func (c *Client) Submit() error {
+	err := c.client.Do(c.Request, c.Response)
+	return err
 }
 
 // New returns a new client for HTTP requests.
-func New(cfg *config.Configuration, url string) (*Client, error) {
+func New(url string) (*Client, error) {
 	client := &Client{
-		BaseUrl: url,
+		client:   fasthttp.Client{},
+		BaseUrl:  url,
+		Request:  fasthttp.AcquireRequest(),
+		Response: fasthttp.AcquireResponse(),
 	}
 
 	return client, nil

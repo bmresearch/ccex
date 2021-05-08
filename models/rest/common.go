@@ -1,4 +1,4 @@
-package models
+package rest
 
 type BaseResponse struct {
 	Success bool `json:"success"`

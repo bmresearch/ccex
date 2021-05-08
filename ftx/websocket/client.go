@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/murlokito/ccex/models/ws"
 	"time"
 
 	"github.com/murlokito/ccex/exchange"
@@ -10,7 +11,6 @@ import (
 	"github.com/murlokito/ccex/log"
 
 	"github.com/murlokito/ccex/config"
-	"github.com/murlokito/ccex/ftx/websocket/models"
 	"github.com/murlokito/ccex/internal/websocket"
 )
 
@@ -128,7 +128,7 @@ func (c Client) OnMessage(message []byte) error {
 	switch channel {
 	case Markets:
 		if c.OnMarkets != nil {
-			var markets models.MarketMessage
+			var markets ws.MarketMessage
 			err = json.Unmarshal(message, &markets)
 			if err != nil {
 				return err
@@ -138,7 +138,7 @@ func (c Client) OnMessage(message []byte) error {
 		break
 	case Trades:
 		if c.OnTrade != nil {
-			var trades models.TradeMessage
+			var trades ws.TradeMessage
 			err = json.Unmarshal(message, &trades)
 			if err != nil {
 				return err
@@ -148,7 +148,7 @@ func (c Client) OnMessage(message []byte) error {
 		break
 	case Orderbook:
 		if c.OnOrderBook != nil {
-			var orderbook models.OrderBookMessage
+			var orderbook ws.OrderBookMessage
 			err = json.Unmarshal(message, &orderbook)
 			if err != nil {
 				return err
@@ -158,7 +158,7 @@ func (c Client) OnMessage(message []byte) error {
 		break
 	case Ticker:
 		if c.OnTicker != nil {
-			var ticker models.TickerMessage
+			var ticker ws.TickerMessage
 			err = json.Unmarshal(message, &ticker)
 			if err != nil {
 				return err
@@ -174,11 +174,11 @@ func (c Client) OnMessage(message []byte) error {
 func (c Client) Authenticate() ([]byte, error) {
 	ts, signature := c.AuthenticationMessage()
 
-	data := models.LoginMessage{
-		BaseOperation: models.BaseOperation{
+	data := ws.LoginMessage{
+		BaseOperation: ws.BaseOperation{
 			Op: "login",
 		},
-		AuthenticationMessage: models.AuthenticationMessage{
+		AuthenticationMessage: ws.AuthenticationMessage{
 			Key:       c.config.Auth.Secret,
 			Signature: signature,
 			Timestamp: ts,
@@ -200,8 +200,8 @@ func (c Client) Authenticate() ([]byte, error) {
 // Subscribe subscribes to a websocket channel.
 func (c Client) Subscribe(channel string, market string) error {
 
-	data := models.SubscribeMessage{
-		BaseOperation: models.BaseOperation{
+	data := ws.SubscribeMessage{
+		BaseOperation: ws.BaseOperation{
 			Op: "subscribe",
 		},
 		Channel: channel,

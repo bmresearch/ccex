@@ -1,9 +1,8 @@
 package ftx
 
 import (
-	"github.com/murlokito/ccex/common"
 	"github.com/murlokito/ccex/ftx/rest"
-	"time"
+	models "github.com/murlokito/ccex/models/rest"
 )
 
 type (
@@ -14,23 +13,23 @@ type (
 	}
 )
 
-func (m MarketsClient) GetMarkets() (common.Response, error) {
+func (m MarketsClient) GetMarkets(req *models.RequestForMarkets) (*models.ResponseForMarkets, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetMarket(symbol string) (common.Response, error) {
+func (m MarketsClient) GetMarket(req *models.RequestForMarket) (*models.ResponseForMarket, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetOrderBook(symbol string) (common.Response, error) {
+func (m MarketsClient) GetOrderBook(req *models.RequestForOrderBook) (*models.ResponseForOrderBook, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetTrades(symbol string) (common.Response, error) {
+func (m MarketsClient) GetTrades(req *models.RequestForTrades) (*models.ResponseForTrades, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetCandles(symbol string, resolution, limit int, start, end time.Time) (common.Response, error) {
+func (m MarketsClient) GetCandles(req *models.RequestForCandles) (*models.ResponseForCandles, error) {
 	panic("implement me")
 }
 

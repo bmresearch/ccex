@@ -100,6 +100,8 @@ const (
 	FuturesEndpoint = "/futures"
 	// The ExpiredFuturesEndpoint is used as GET to fetch all of the expired futures
 	ExpiredFuturesEndpoint = "/expired_futures"
+	// The FuturesFundingRate is used as GET to fetch the funding rate of all futures
+	FuturesFundingRate = "/funding_rates"
 
 	/*
 		Futures Endpoint Formats
@@ -113,6 +115,10 @@ const (
 	IndexWeightsFormat = "/indexes/%s/weights"
 	// The IndexCandlesEndpointFormat
 	IndexCandlesEndpointFormat = "/indexes/%s/candles?resolution=%s&limit=%s&start_time=%s&end_time=%s"
+	// The FuturesFutureFundingRate is used as GET to fetch the funding rate of a certain future
+	FuturesFutureFundingRate = "/funding_rates?future=%s"
+	// The FuturesFutureStartEndFundingRate is used as GET to fetch the funding rate of a certain future between a period of time
+	FuturesFutureStartEndFundingRate = "/funding_rates?future=%s&start=%d&end=%d"
 
 	/*
 		Orders Endpoints
@@ -205,9 +211,15 @@ const (
 
 	// The FundingPaymentsEndpoint
 	FundingPaymentsEndpoint = "/funding_payments"
-	FundingPaymentsFutureEndpoint = "/funding_payments?future=%s"
-	FundingPaymentsFutureStartEndEndpoint = "/funding_payments?future=%s&start_time=%d&end_time=%d"
 
+	/*
+		Funding Payments Endpoint Formats
+	*/
+
+	// The FundingPaymentsFutureEndpoint where it only fetches for a certain future
+	FundingPaymentsFutureEndpoint = "/funding_payments?future=%s"
+	// The FundingPaymentsFutureStartEndEndpoint where it only fetches for a certain future between a period of time
+	FundingPaymentsFutureStartEndEndpoint = "/funding_payments?future=%s&start_time=%d&end_time=%d"
 
 	/*
 		Leveraged Tokens Endpoints
