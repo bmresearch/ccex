@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/murlokito/ccex/examples"
 	"github.com/murlokito/ccex/ftx"
 	"github.com/murlokito/ccex/ftx/websocket"
 	"github.com/murlokito/ccex/models/rest"
@@ -9,18 +10,13 @@ import (
 	"time"
 )
 
-type Data struct {
-	Trades map[string][]ws.TradeData
-	Ticker map[string]ws.TickerData
-}
-
 func main() {
 
 	markets := []string{
 		"BTC-PERP", "ETH-PERP",
 	}
 
-	data := Data{
+	data := examples.Data{
 		Trades: map[string][]ws.TradeData{},
 		Ticker: map[string]ws.TickerData{},
 	}
@@ -37,28 +33,28 @@ func main() {
 			//str := fmt.Sprintf("price: %v size: %v side: %v liq: %v\n", trade.Price, trade.Price, trade.Side, trade.Liquidation)
 			//complete += str
 			tradeVol := trade.Size * trade.Price
-			if tradeVol > 100000 {
-				fmt.Printf("{%v} {%v} Volume: $%.2f Price: $%v Liquidation: %v\n", message.Market, trade.Side, tradeVol, trade.Price, trade.Liquidation)
+			if tradeVol > 500000 {
+				fmt.Printf("{%v} {%v} Volume: $%v Price: $%v Liquidation: %v\n", message.Market, trade.Side, prettyFormat(tradeVol), trade.Price, trade.Liquidation)
 			}
 		}
 		//fmt.Println(complete)
 	}
-
 
 	ftxClient, err := ftx.NewFTXClient(nil, nil, tickerHandler, tradeHandler, nil)
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
 
-	/* List all futures */
+	/* List all futures
 	futures, err := ftxClient.Futures.GetFutures(&rest.RequestForFutures{})
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println(futures)
+		fmt.Sprintf("futures available: %v", len(futures.Result))
 	}
+	*/
 
-	/* Funding Rates */
+	/* Funding Rates
 	fundingRates, err := ftxClient.Futures.GetFundingRate(&rest.RequestForFundingRates{
 		Future: "BTC-PERP",
 		Start:  time.Time{},
@@ -69,6 +65,26 @@ func main() {
 	} else {
 		fmt.Println(fundingRates)
 	}
+	*/
+
+	/* Historical OHLCV of the FTX indexes
+
+	start, err := time.Parse(time.RFC3339, "2020-10-02T15:04:05+07:00")
+	end, err := time.Parse(time.RFC3339, "2020-10-03T15:04:05+07:00")
+
+	historical, err := ftxClient.Futures.GetHistoricalIndex(&rest.RequestForHistoricalIndex{
+		Index: "DEFI",
+		Resolution: 60, // 60 seconds per candle
+		Limit: 2000,
+		Start: start,
+		End: end,
+	})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(historical)
+	}
+	*/
 
 	ftxClient.Streaming.Connect()
 
@@ -84,17 +100,89 @@ func main() {
 		}
 	}
 
-	for {
-		if ftxClient.Streaming.Connected() {
-			fmt.Println(fmt.Sprintf("client is connected - active subs %v", ftxClient.Streaming.Subscriptions()))
+	go func() {
+		for {
+			/* Open interest data */
+			for _, market := range markets {
+				openInterest, err := ftxClient.Futures.GetOpenInterest(&rest.RequestForOpenInterest{
+					Future: market,
+				})
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println(
+						fmt.Sprintf(
+							"%v: open interest for %v - OI: %.2f - 24h VOL: %.2f - Next FR: %.6f",
+							time.Now().Format(time.RFC3339),
+							market,
+							openInterest.Result.OpenInterest,
+							openInterest.Result.Volume,
+							openInterest.Result.FundingRate,
+						),
+					)
+				}
+			}
+			time.Sleep(1 * time.Minute)
 		}
+	}()
+
+	for {
 		for k, v := range data.Trades {
-			fmt.Println(fmt.Sprintf("number of trades for %v - %v", k, len(v)))
+			fmt.Println(fmt.Sprintf("trades (inception) for %v - %v", k, len(v)))
+			fmt.Println(fmt.Sprintf("trades (Δ 1m) for %v - %v", k, getDeltaTrades(v, 1*time.Minute, time.Now())))
+			fmt.Println(fmt.Sprintf("trades (Δ 15m) for %v - %v", k, getDeltaTrades(v, 15*time.Minute, time.Now())))
+			fmt.Println(fmt.Sprintf("volume (Δ 1m) for %v - $%v", k, prettyFormat(getDeltaVol(v, 1*time.Minute, time.Now()))))
+			fmt.Println(fmt.Sprintf("volume (Δ 15m) for %v - $%v", k, prettyFormat(getDeltaVol(v, 15*time.Minute, time.Now()))))
 		}
 		for k, v := range data.Ticker {
-			fmt.Println(fmt.Sprintf("latest ticker for %v - %v", k, v.Last))
+			fmt.Println(fmt.Sprintf("latest ticker for %v - $%.2f", k, v.Last))
 		}
-		time.Sleep(15 * time.Second)
+		time.Sleep(1 * time.Minute)
 	}
 
+}
+
+func prettyFormat(value float64) string {
+	if value > 1000000000 {
+		return fmt.Sprintf("%.2fB", value / 1000000000)
+	}
+	if value > 1000000 {
+		return fmt.Sprintf("%.2fM", value / 1000000)
+	}
+	if value > 1000 {
+		return fmt.Sprintf("%.2fK", value / 1000)
+	}
+	return "%.2f"
+}
+
+func getDeltaTrades(trades []ws.TradeData, duration time.Duration, moment time.Time) int {
+	var count int
+	deltaTime := moment.Add(-duration)
+	for _, item := range trades {
+		t, err := time.Parse(time.RFC3339, item.Timestamp)
+		if err != nil {
+			fmt.Println(err.Error())
+			continue
+		}
+		if deltaTime.Before(t) {
+			count++
+		}
+	}
+	return count
+}
+
+func getDeltaVol(trades []ws.TradeData, duration time.Duration, moment time.Time) float64 {
+	var count float64
+	deltaTime := moment.Add(-duration)
+	for _, item := range trades {
+		t, err := time.Parse(time.RFC3339, item.Timestamp)
+		if err != nil {
+			fmt.Println(err.Error())
+			continue
+		}
+		if deltaTime.Before(t) {
+			count += item.Size * item.Price
+		}
+	}
+	return count
 }

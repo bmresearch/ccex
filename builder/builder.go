@@ -9,7 +9,9 @@ import (
 )
 
 // NewExchange returns a configured client with the passed config.
-func NewExchange(exchange exchange.Exchange, config *config.Configuration) (*exchange.ExchangeClient, error) {
+func NewExchange(exchange exchange.Exchange, config *config.Configuration, marketsHandler exchange.OnMarketsHandler,
+	tickerHandler exchange.OnTickerHandler, tradesHandler exchange.OnTradeHandler,
+	orderBookHandler exchange.OnOrderBookHandler) (*exchange.Client, error) {
 	switch exchange {
 	case Binance:
 		return nil, ccex.ErrExchangeNotImplemented
@@ -22,7 +24,7 @@ func NewExchange(exchange exchange.Exchange, config *config.Configuration) (*exc
 	case Deribit:
 		return nil, ccex.ErrExchangeNotImplemented
 	case FTX:
-		return ftx.NewFTXClient(config)
+		return ftx.NewFTXClient(config, marketsHandler, tickerHandler, tradesHandler, orderBookHandler)
 	case FTXUS:
 		return nil, ccex.ErrExchangeNotImplemented
 	default:

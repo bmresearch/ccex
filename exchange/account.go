@@ -13,8 +13,5 @@ type (
 
 		// PostAccountLeverageChange is used to change the account's maximum leverage to the amount specified by `leverage`.
 		PostAccountLeverageChange(req *rest.RequestForAccountLeverageChange) (*rest.ResponseForAccountLeverageChange, error)
-
-		// PostFuturesAccountLeverageChange is used to change the futures account's maximum leverage to the amount specified by `leverage` on the market specified by `symbol`.
-		PostFuturesAccountLeverageChange(change *rest.RequestForFuturesAccountLeverageChange) (*rest.ResponseForFuturesAccountLeverageChange, error)
 	}
 )

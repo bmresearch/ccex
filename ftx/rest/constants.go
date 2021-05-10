@@ -108,13 +108,17 @@ const (
 	*/
 
 	// The FuturesEndpointFormat
-	FuturesEndpointFormat = "/futures/%s/%s"
+	FuturesEndpointFormat = "/futures/%s"
 	// The FuturesStatsFormat
-	FuturesStatsFormat = "/futures/%s/%s/stats"
+	FuturesStatsFormat = "/futures/%s/stats"
 	// The IndexWeightsFormat
 	IndexWeightsFormat = "/indexes/%s/weights"
 	// The IndexCandlesEndpointFormat
-	IndexCandlesEndpointFormat = "/indexes/%s/candles?resolution=%s&limit=%s&start_time=%s&end_time=%s"
+	IndexCandlesEndpointFormat = "/indexes/%s/candles?resolution=%d"
+	// The IndexCandlesLimitEndpointFormat
+	IndexCandlesLimitEndpointFormat = "/indexes/%s/candles?resolution=%d&limit=%d"
+	// The IndexCandlesLimitStartEndEndpointFormat
+	IndexCandlesLimitStartEndEndpointFormat = "/indexes/%s/candles?resolution=%d&limit=%d&start_time=%d&end_time=%d"
 	// The FuturesFutureFundingRate is used as GET to fetch the funding rate of a certain future
 	FuturesFutureFundingRate = "/funding_rates?future=%s"
 	// The FuturesFutureStartEndFundingRate is used as GET to fetch the funding rate of a certain future between a period of time

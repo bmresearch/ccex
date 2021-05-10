@@ -24,7 +24,7 @@ type (
 		GetFuture(future *rest.RequestForFuture) (*rest.ResponseForFuture, error)
 
 		// GetOpenInterest fetches the stats associated with the future specified by `future`.
-		GetOpenInterest(stats *rest.RequestForOpenInterest)(*rest.ResponseForFutureStats, error)
+		GetOpenInterest(stats *rest.RequestForOpenInterest)(*rest.ResponseForOpenInterest, error)
 
 		// GetFundingRate fetches the funding rates for the future specified by `future`.
 		GetFundingRate(rates *rest.RequestForFundingRates) (*rest.ResponseForFundingRates, error)
@@ -41,5 +41,8 @@ type (
 			Optionally provide `start` and `end` to request a specific period.
 		*/
 		GetHistoricalIndex(req *rest.RequestForHistoricalIndex) (*rest.ResponseForHistoricalIndex, error)
+
+		// PostFuturesAccountLeverageChange is used to change the futures account's maximum leverage to the amount specified by `leverage` on the market specified by `symbol`.
+		PostFuturesAccountLeverageChange(change *rest.RequestForFuturesAccountLeverageChange) (*rest.ResponseForFuturesAccountLeverageChange, error)
 	}
 )

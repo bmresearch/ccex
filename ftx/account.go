@@ -20,9 +20,6 @@ func (a AccountClient) PostAccountLeverageChange(req *models.RequestForAccountLe
 	panic("implement me")
 }
 
-func (a AccountClient) PostFuturesAccountLeverageChange(req *models.RequestForFuturesAccountLeverageChange) (*models.ResponseForFuturesAccountLeverageChange, error) {
-	panic("implement me")
-}
 
 // NewAccountClient returns a new configured account client
 func NewAccountClient(client *rest.Client) (*AccountClient, error) {

@@ -52,6 +52,7 @@ type (
 		Size        float64 `json:"size"`
 		Price       float64 `json:"price"`
 		Liquidation bool    `json:"liquidation"`
+		Timestamp   string  `json:"time"`
 	}
 
 	// TradeMessage holds a message from the trades channel
@@ -75,7 +76,7 @@ type (
 		Bid       float64 `json:"bid"`
 		Ask       float64 `json:"ask"`
 		Last      float64 `json:"last"`
-		Timestamp float64 `json:"timestamp"`
+		Timestamp float64   `json:"time"`
 	}
 
 	// TickerMessage holds a message from the ticker channel

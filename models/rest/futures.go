@@ -116,13 +116,19 @@ type (
 		Result []FundingPayment `json:"result"`
 	}
 
- 	// RequestForIndexWeights represents a request for index weights data
+	// RequestForIndexWeights represents a request for index weights data
 	RequestForIndexWeights struct {
 		Index string
 	}
 
 	// IndexWeight holds the necessary...
 	IndexWeight struct {
+	}
+
+	// ResponseForIndexWeights holds the necessary information to represent the response for index weights
+	ResponseForIndexWeights struct {
+		BaseResponse
+		Result []IndexWeight `json:"result"`
 	}
 
 	// RequestForHistoricalIndex represents a request for historical index data
@@ -134,14 +140,32 @@ type (
 		End        time.Time
 	}
 
-	// HistoricalIndex holds the necessary...
-	HistoricalIndex struct {
+	ResponseForHistoricalIndex struct {
+		BaseResponse
+		Result []Candle `json:"result"`
 	}
 
 	RequestForOpenInterest struct {
 		Future string
 	}
 
+	// OpenInterest holds the necessary information to represent future's statistics
+	OpenInterest struct {
+		Volume       float64 `json:"volume"`
+		OpenInterest float64 `json:"openInterest"`
+		FundingRate  float64 `json:"nextFundingRate"`
+	}
+
+	ResponseForOpenInterest struct {
+		BaseResponse
+		Result OpenInterest `json:"result"`
+	}
+
 	RequestForExpiredFutures struct {
+	}
+
+	ResponseForExpiredFutures struct {
+		BaseResponse
+		Result []Future `json:"result"`
 	}
 )

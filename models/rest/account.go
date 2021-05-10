@@ -51,6 +51,11 @@ type (
 		Positions                    []Position `json:"positions"`
 	}
 
+	// ResponseForAccount holds the necessary information to represent the response the account data
+	ResponseForAccount struct {
+		BaseResponse
+		Result Account `json:"result"`
+	}
 
 	RequestForAccountLeverageChange struct {
 		Leverage int
