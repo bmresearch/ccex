@@ -17,30 +17,41 @@ func main() {
 	}
 
 	data := examples.Data{
-		Trades: map[string][]ws.TradeData{},
-		Ticker: map[string]ws.TickerData{},
+		Trades: map[string][]ws.Trade{},
+		Ticker: map[string]ws.Ticker{},
+		OrderBook: map[string]ws.OrderBookSnapshot{},
 	}
 
-	tickerHandler := func(message ws.TickerMessage) {
-		//fmt.Printf("bid: %v ask: %v last: %v\n", message.Data.Bid, message.Data.Ask, message.Data.Last)
-		data.Ticker[message.Market] = message.Data
+	tickerHandler := func(symbol string, ticker ws.Ticker) {
+		fmt.Printf("bid: %v ask: %v last: %v\n", ticker.Bid, ticker.Ask, ticker.LastPrice)
+		data.Ticker[symbol] = ticker
 	}
 
-	tradeHandler := func(message ws.TradeMessage) {
-		//complete := fmt.Sprintf("num trades: %v", len(message.Data))
-		for _, trade := range message.Data {
-			data.Trades[message.Market] = append(data.Trades[message.Market], trade)
-			//str := fmt.Sprintf("price: %v size: %v side: %v liq: %v\n", trade.Price, trade.Price, trade.Side, trade.Liquidation)
-			//complete += str
+	tradesHandler := func(symbol string, trades ws.Trades) {
+		complete := fmt.Sprintf("num trades: %v", len(trades))
+		for _, trade := range trades {
+			data.Trades[symbol] = append(data.Trades[symbol], trade)
+			str := fmt.Sprintf("price: %v size: %v side: %v liq: %v\n", trade.Price, trade.Price, trade.Side, trade.Liquidation)
+			complete += str
 			tradeVol := trade.Size * trade.Price
 			if tradeVol > 500000 {
-				fmt.Printf("{%v} {%v} Volume: $%v Price: $%v Liquidation: %v\n", message.Market, trade.Side, prettyFormat(tradeVol), trade.Price, trade.Liquidation)
+				fmt.Printf("{%v} {%v} Volume: $%v Price: $%v Liquidation: %v\n", symbol, trade.Side, examples.PrettyFormat(tradeVol), trade.Price, trade.Liquidation)
 			}
 		}
-		//fmt.Println(complete)
+		fmt.Println(complete)
 	}
 
-	ftxClient, err := ftx.NewFTXClient(nil, nil, tickerHandler, tradeHandler, nil)
+	obsSnapshotHandler := func(symbol string, obs ws.OrderBookSnapshot) {
+		fmt.Printf("{%v} bids: %v asks: %v \n", symbol, len(obs.Bids),len(obs.Asks))
+		data.OrderBook[symbol] = obs
+	}
+
+	obdSnapshotHandler := func(symbol string, obd ws.OrderBookDelta) {
+		fmt.Printf("{%v} deleted: %v updated: %v inserted: %v \n", symbol, len(obd.Delete), len(obd.Update), len(obd.Insert))
+		// TODO: process order book deltas and update snapshot
+	}
+
+	ftxClient, err := ftx.NewClientWith(nil, tickerHandler, tradesHandler, obsSnapshotHandler, obdSnapshotHandler)
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
@@ -89,12 +100,17 @@ func main() {
 	ftxClient.Streaming.Connect()
 
 	for _, market := range markets {
-		err = ftxClient.Streaming.Subscribe(websocket.Ticker, market)
+/*		err = ftxClient.Streaming.Subscribe(websocket.Ticker, market)
 		if err != nil {
 			fmt.Printf("err: %v", err)
 		}
 
 		err = ftxClient.Streaming.Subscribe(websocket.Trades, market)
+		if err != nil {
+			fmt.Printf("err: %v", err)
+		}
+*/
+		err = ftxClient.Streaming.Subscribe(websocket.Orderbook, market)
 		if err != nil {
 			fmt.Printf("err: %v", err)
 		}
@@ -129,60 +145,15 @@ func main() {
 	for {
 		for k, v := range data.Trades {
 			fmt.Println(fmt.Sprintf("trades (inception) for %v - %v", k, len(v)))
-			fmt.Println(fmt.Sprintf("trades (Δ 1m) for %v - %v", k, getDeltaTrades(v, 1*time.Minute, time.Now())))
-			fmt.Println(fmt.Sprintf("trades (Δ 15m) for %v - %v", k, getDeltaTrades(v, 15*time.Minute, time.Now())))
-			fmt.Println(fmt.Sprintf("volume (Δ 1m) for %v - $%v", k, prettyFormat(getDeltaVol(v, 1*time.Minute, time.Now()))))
-			fmt.Println(fmt.Sprintf("volume (Δ 15m) for %v - $%v", k, prettyFormat(getDeltaVol(v, 15*time.Minute, time.Now()))))
+			fmt.Println(fmt.Sprintf("trades (Δ 1m) for %v - %v", k, examples.GetDeltaTrades(v, 1*time.Minute, time.Now())))
+			fmt.Println(fmt.Sprintf("trades (Δ 15m) for %v - %v", k, examples.GetDeltaTrades(v, 15*time.Minute, time.Now())))
+			fmt.Println(fmt.Sprintf("volume (Δ 1m) for %v - $%v", k, examples.PrettyFormat(examples.GetDeltaVol(v, 1*time.Minute, time.Now()))))
+			fmt.Println(fmt.Sprintf("volume (Δ 15m) for %v - $%v", k, examples.PrettyFormat(examples.GetDeltaVol(v, 15*time.Minute, time.Now()))))
 		}
 		for k, v := range data.Ticker {
-			fmt.Println(fmt.Sprintf("latest ticker for %v - $%.2f", k, v.Last))
+			fmt.Println(fmt.Sprintf("latest ticker for %v - $%.2f", k, v.LastPrice))
 		}
 		time.Sleep(1 * time.Minute)
 	}
 
-}
-
-func prettyFormat(value float64) string {
-	if value > 1000000000 {
-		return fmt.Sprintf("%.2fB", value / 1000000000)
-	}
-	if value > 1000000 {
-		return fmt.Sprintf("%.2fM", value / 1000000)
-	}
-	if value > 1000 {
-		return fmt.Sprintf("%.2fK", value / 1000)
-	}
-	return "%.2f"
-}
-
-func getDeltaTrades(trades []ws.TradeData, duration time.Duration, moment time.Time) int {
-	var count int
-	deltaTime := moment.Add(-duration)
-	for _, item := range trades {
-		t, err := time.Parse(time.RFC3339, item.Timestamp)
-		if err != nil {
-			fmt.Println(err.Error())
-			continue
-		}
-		if deltaTime.Before(t) {
-			count++
-		}
-	}
-	return count
-}
-
-func getDeltaVol(trades []ws.TradeData, duration time.Duration, moment time.Time) float64 {
-	var count float64
-	deltaTime := moment.Add(-duration)
-	for _, item := range trades {
-		t, err := time.Parse(time.RFC3339, item.Timestamp)
-		if err != nil {
-			fmt.Println(err.Error())
-			continue
-		}
-		if deltaTime.Before(t) {
-			count += item.Size * item.Price
-		}
-	}
-	return count
 }

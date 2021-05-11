@@ -1,4 +1,4 @@
-package builder
+package main
 
 import (
 	"fmt"
@@ -17,31 +17,31 @@ func main() {
 	}
 
 	data := examples.Data{
-		Trades: map[string][]ws.TradeData{},
-		Ticker: map[string]ws.TickerData{},
+		Trades: map[string][]ws.Trade{},
+		Ticker: map[string]ws.Ticker{},
 	}
 
-	tickerHandler := func(message ws.TickerMessage) {
+	tickerHandler := func(symbol string, message ws.Ticker) {
 		//fmt.Printf("bid: %v ask: %v last: %v\n", message.Data.Bid, message.Data.Ask, message.Data.Last)
-		data.Ticker[message.Market] = message.Data
+		data.Ticker[symbol] = message
 	}
 
-	tradeHandler := func(message ws.TradeMessage) {
+	tradeHandler := func(symbol string, message ws.Trades) {
 		//complete := fmt.Sprintf("num trades: %v", len(message.Data))
-		for _, trade := range message.Data {
-			data.Trades[message.Market] = append(data.Trades[message.Market], trade)
+		for _, trade := range message {
+			data.Trades[symbol] = append(data.Trades[symbol], trade)
 			//str := fmt.Sprintf("price: %v size: %v side: %v liq: %v\n", trade.Price, trade.Price, trade.Side, trade.Liquidation)
 			//complete += str
 			tradeVol := trade.Size * trade.Price
 			if tradeVol > 100000 {
-				fmt.Printf("{%v} {%v} Volume: $%.2f Price: $%v Liquidation: %v\n", message.Market, trade.Side, tradeVol, trade.Price, trade.Liquidation)
+				fmt.Printf("{%v} {%v} Volume: $%.2f Price: $%v Liquidation: %v\n", symbol, trade.Side, tradeVol, trade.Price, trade.Liquidation)
 			}
 		}
 		//fmt.Println(complete)
 	}
 
 
-	client, err := builder.NewExchange(builder.FTX, nil, nil, tickerHandler, tradeHandler, nil)
+	client, err := builder.NewExchangeWith(builder.FTX, nil, tickerHandler, tradeHandler, nil)
 	if err != nil {
 		fmt.Printf("err: %v", err)
 	}
@@ -88,7 +88,7 @@ func main() {
 			fmt.Println(fmt.Sprintf("number of trades for %v - %v", k, len(v)))
 		}
 		for k, v := range data.Ticker {
-			fmt.Println(fmt.Sprintf("latest ticker for %v - %v", k, v.Last))
+			fmt.Println(fmt.Sprintf("latest ticker for %v - %v", k, v.LastPrice))
 		}
 		time.Sleep(15 * time.Second)
 	}

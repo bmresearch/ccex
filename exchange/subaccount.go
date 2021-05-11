@@ -1,6 +1,8 @@
 package exchange
 
-import "github.com/murlokito/ccex/models/rest"
+import (
+	"github.com/murlokito/ccex/models/rest"
+)
 
 type (
 	// SubAccount interface specifies functionality to interact with a SubAccount API.

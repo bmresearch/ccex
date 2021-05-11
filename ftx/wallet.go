@@ -2,7 +2,7 @@ package ftx
 
 import (
 	"github.com/murlokito/ccex/ftx/rest"
-	models "github.com/murlokito/ccex/models/rest"
+	rest3 "github.com/murlokito/ccex/models/rest"
 )
 
 type (
@@ -13,35 +13,35 @@ type (
 	}
 )
 
-func (w WalletClient) GetWalletBalances(req *models.RequestForWalletBalances) (models.ResponseForWalletBalances, error) {
+func (w WalletClient) GetWalletBalances(req *rest3.RequestForWalletBalances) (rest3.ResponseForWalletBalances, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetDepositAddress(req *models.RequestForDepositAddress) (models.ResponseForDepositAddress, error) {
+func (w WalletClient) GetDepositAddress(req *rest3.RequestForDepositAddress) (rest3.ResponseForDepositAddress, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetWalletDepositHistory(req *models.RequestForWalletDepositHistory) (models.ResponseForWalletDepositHistory, error) {
+func (w WalletClient) GetWalletDepositHistory(req *rest3.RequestForWalletDepositHistory) (rest3.ResponseForWalletDepositHistory, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetWalletWithdrawalHistory(req *models.RequestForWalletWithdrawalHistory) (models.ResponseForWalletWithdrawalHistory, error) {
+func (w WalletClient) GetWalletWithdrawalHistory(req *rest3.RequestForWalletWithdrawalHistory) (rest3.ResponseForWalletWithdrawalHistory, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) GetSavedAddresses(req *models.RequestForSavedAddresses) (models.ResponseForSavedAddresses, error) {
+func (w WalletClient) GetSavedAddresses(req *rest3.RequestForSavedAddresses) (rest3.ResponseForSavedAddresses, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) PostCreateSavedAddress(req *models.RequestForSavedAddressCreation) (models.ResponseForSavedAddressCreation, error) {
+func (w WalletClient) PostCreateSavedAddress(req *rest3.RequestForSavedAddressCreation) (rest3.ResponseForSavedAddressCreation, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) DeleteSavedAddress(req *models.RequestForSavedAddressDeletion) (models.ResponseForSavedAddressDeletion, error) {
+func (w WalletClient) DeleteSavedAddress(req *rest3.RequestForSavedAddressDeletion) (rest3.ResponseForSavedAddressDeletion, error) {
 	panic("implement me")
 }
 
-func (w WalletClient) PostWalletWithdrawal(req *models.RequestForWalletWithdrawal) (models.ResponseForWalletWithdrawal, error) {
+func (w WalletClient) PostWalletWithdrawal(req *rest3.RequestForWalletWithdrawal) (rest3.ResponseForWalletWithdrawal, error) {
 	panic("implement me")
 }
 

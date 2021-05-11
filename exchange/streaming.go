@@ -5,27 +5,34 @@ import (
 )
 
 type (
-	// OnMarketsHandler is called whenever the websocket client receives a market message.
-	OnMarketsHandler func(data ws.MarketMessage)
 
-	// OnOrderBookHandler is called whenever the websocket client receives an order book message.
-	OnOrderBookHandler func(data ws.OrderBookMessage)
+	/*
+		OrderBookDeltaHandler is called whenever the websocket client receives an order book delta message.
 
-	// OnTickerHandler is called whenever the websocket client receives a ticker message.
-	OnTickerHandler func(data ws.TickerMessage)
+		This message specifies points in the order book which must be updated, there may be insertions, updates and deletions.
+	 */
+	OrderBookDeltaHandler func(symbol string, data ws.OrderBookDelta)
 
-	// OnTradeHandler is called whenever the websocket client receives a trade message.
-	OnTradeHandler func(data ws.TradeMessage)
+	/*
+		OrderBookSnapshotHandler is called whenever the websocket client receives an order book snapshot message.
 
-	// OnMessageHandler is a type defined to represent a handler called for a certain channel and market combination.
-	OnMessageHandler func(message interface{})
+		This message establishes the initial state of the order book, all subsequent messages will be dispatched by the OrderBookDeltaHandler.
+	 */
+	OrderBookSnapshotHandler func(symbol string, data ws.OrderBookSnapshot)
 
-	// MessageDispatcher represents a subscription with a personal handler.
-	MessageDispatcher struct {
-		Channel string
-		Market  string
-		Handler OnMessageHandler
-	}
+	// TickerHandler is called whenever the websocket client receives a message from the ticker/instrument channels.
+	TickerHandler func(symbol string, data ws.Ticker)
+
+	// TradesHandler is called whenever the websocket client receives a message from the trades channel.
+	TradesHandler func(symbol string, data ws.Trades)
+
+	/*
+		MessageHandler is a type defined to represent a handler called when a message is read from the connection.
+
+		This allows the user of the library to, in a way, override the internal message handler.
+		When the method which allows this parameter is used, the user will need to process the messages accordingly.
+	*/
+	MessageHandler func(message []byte) error
 
 	// Websocket specifies functionality to interact with the websocket API.
 	Websocket interface {
@@ -34,9 +41,5 @@ type (
 		Reconnect() error
 		Subscriptions() map[string][]string
 		Subscribe(channel string, market string) error
-		OnMarketHandler(handler OnMarketsHandler)
-		OnOrderBookHandler(handler OnOrderBookHandler)
-		OnTradesHandler(handler OnTradeHandler)
-		OnTickerHandler(handler OnTickerHandler)
 	}
 )

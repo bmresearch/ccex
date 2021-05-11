@@ -2,7 +2,7 @@ package ftx
 
 import (
 	"github.com/murlokito/ccex/ftx/rest"
-	models "github.com/murlokito/ccex/models/rest"
+	rest3 "github.com/murlokito/ccex/models/rest"
 )
 
 type (
@@ -12,11 +12,11 @@ type (
 	}
 )
 
-func (a AccountClient) GetPositions(req *models.RequestForPositions) (*models.ResponseForPositions, error) {
+func (a AccountClient) GetPositions(req *rest3.RequestForPositions) (*rest3.ResponseForPositions, error) {
 	panic("implement me")
 }
 
-func (a AccountClient) PostAccountLeverageChange(req *models.RequestForAccountLeverageChange) (*models.ResponseForAccountLeverageChange, error) {
+func (a AccountClient) PostAccountLeverageChange(req *rest3.RequestForAccountLeverageChange) (*rest3.ResponseForAccountLeverageChange, error) {
 	panic("implement me")
 }
 

@@ -1,16 +1,15 @@
-package ftx
+package bybit
 
 import (
+	"github.com/murlokito/ccex/bybit/rest"
+	"github.com/murlokito/ccex/bybit/websocket"
 	"github.com/murlokito/ccex/config"
 	"github.com/murlokito/ccex/exchange"
-	"github.com/murlokito/ccex/ftx/rest"
-	"github.com/murlokito/ccex/ftx/websocket"
 )
 
-// NewClientWith returns a new configured client for FTX, to be used with the agnostic builder.
+// NewClientWith returns a new configured client for Bybit, to be used with the agnostic builder.
 func NewClientWith(config *config.Configuration, tickerHandler exchange.TickerHandler,
-	tradesHandler exchange.TradesHandler, orderBookSnapshotHandler exchange.OrderBookSnapshotHandler,
-	orderBookDeltaHandler exchange.OrderBookDeltaHandler) (*exchange.Client, error) {
+	tradesHandler exchange.TradeHandler, orderBookHandler exchange.OrderBookHandler) (*exchange.Client, error) {
 
 	// Initialize the base http client that takes care of authentication and rate limiting
 	client, err := rest.NewClient(config)
@@ -20,11 +19,6 @@ func NewClientWith(config *config.Configuration, tickerHandler exchange.TickerHa
 
 	// Initialize the clients for the specific API segments
 	accountClient, err := NewAccountClient(client)
-	if err != nil {
-		return nil, err
-	}
-
-	subAccountClient, err := NewSubAccountClient(client)
 	if err != nil {
 		return nil, err
 	}
@@ -44,41 +38,31 @@ func NewClientWith(config *config.Configuration, tickerHandler exchange.TickerHa
 		return nil, err
 	}
 
-	spotClient, err := NewSpotClient(client)
-	if err != nil {
-		return nil, err
-	}
-
 	futuresClient, err := NewFuturesClient(client)
 	if err != nil {
 		return nil, err
 	}
 
-	optionsClient, err := NewOptionsClient(client)
-	if err != nil {
-		return nil, err
-	}
-
 	// Initialize the websocket client
-	wsClient, err := websocket.NewClientWith(config, tickerHandler, tradesHandler, orderBookSnapshotHandler, orderBookDeltaHandler)
+	wsClient, err := websocket.NewClientWith(config, tickerHandler, tradesHandler, orderBookHandler)
 	if err != nil {
 		return nil, err
 	}
 
 	return &exchange.Client{
 		Account:    accountClient,
-		SubAccount: subAccountClient,
+		SubAccount: nil,
 		Wallet:     walletClient,
 		Orders:     ordersClient,
 		Markets:    marketsClient,
-		Spot:       spotClient,
+		Spot:       nil,
 		Futures:    futuresClient,
-		Options:    optionsClient,
+		Options:    nil,
 		Streaming:  wsClient,
 	}, nil
 }
 
-// NewClient returns a new configured client for FTX, to be used with the agnostic builder.
+// NewClient returns a new configured client for Bybit, with a defined message handler.
 func NewClient(config *config.Configuration, messageHandler exchange.MessageHandler) (*exchange.Client, error) {
 
 	// Initialize the base http client that takes care of authentication and rate limiting
@@ -93,11 +77,6 @@ func NewClient(config *config.Configuration, messageHandler exchange.MessageHand
 		return nil, err
 	}
 
-	subAccountClient, err := NewSubAccountClient(client)
-	if err != nil {
-		return nil, err
-	}
-
 	walletClient, err := NewWalletClient(client)
 	if err != nil {
 		return nil, err
@@ -113,17 +92,7 @@ func NewClient(config *config.Configuration, messageHandler exchange.MessageHand
 		return nil, err
 	}
 
-	spotClient, err := NewSpotClient(client)
-	if err != nil {
-		return nil, err
-	}
-
 	futuresClient, err := NewFuturesClient(client)
-	if err != nil {
-		return nil, err
-	}
-
-	optionsClient, err := NewOptionsClient(client)
 	if err != nil {
 		return nil, err
 	}
@@ -136,14 +105,13 @@ func NewClient(config *config.Configuration, messageHandler exchange.MessageHand
 
 	return &exchange.Client{
 		Account:    accountClient,
-		SubAccount: subAccountClient,
+		SubAccount: nil,
 		Wallet:     walletClient,
 		Orders:     ordersClient,
 		Markets:    marketsClient,
-		Spot:       spotClient,
+		Spot:       nil,
 		Futures:    futuresClient,
-		Options:    optionsClient,
+		Options:    nil,
 		Streaming:  wsClient,
 	}, nil
 }
-

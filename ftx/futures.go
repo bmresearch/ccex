@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/murlokito/ccex/ftx/rest"
-	models "github.com/murlokito/ccex/models/rest"
+	rest3 "github.com/murlokito/ccex/models/rest"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -16,14 +16,14 @@ type (
 	}
 )
 
-func (f FuturesClient) GetFutures(req *models.RequestForFutures) (*models.ResponseForFutures, error) {
+func (f FuturesClient) GetFutures(req *rest3.RequestForFutures) (*rest3.ResponseForFutures, error) {
 	url := rest.FuturesEndpoint
 
 	res, err := f.client.Get(url)
 	if err != nil {
 		return nil, errors.Wrap(err, "error during request")
 	}
-	var model models.ResponseForFutures
+	var model rest3.ResponseForFutures
 
 	if len(res) != 0 {
 		err = json.Unmarshal(res, &model)
@@ -37,14 +37,14 @@ func (f FuturesClient) GetFutures(req *models.RequestForFutures) (*models.Respon
 	return &model, nil
 }
 
-func (f FuturesClient) GetFuture(req *models.RequestForFuture) (*models.ResponseForFuture, error) {
+func (f FuturesClient) GetFuture(req *rest3.RequestForFuture) (*rest3.ResponseForFuture, error) {
 	url := fmt.Sprintf(rest.FuturesEndpointFormat, req.Future)
 
 	res, err := f.client.Get(url)
 	if err != nil {
 		return nil, errors.Wrap(err, "error during request")
 	}
-	var model models.ResponseForFuture
+	var model rest3.ResponseForFuture
 
 	if len(res) != 0 {
 		err = json.Unmarshal(res, &model)
@@ -58,7 +58,7 @@ func (f FuturesClient) GetFuture(req *models.RequestForFuture) (*models.Response
 	return &model, nil
 }
 
-func (f FuturesClient) GetOpenInterest(req *models.RequestForOpenInterest) (*models.ResponseForOpenInterest, error) {
+func (f FuturesClient) GetOpenInterest(req *rest3.RequestForOpenInterest) (*rest3.ResponseForOpenInterest, error) {
 	if req.Future == "" {
 		return nil, fmt.Errorf("invalid params, must pass `Future`")
 	}
@@ -69,7 +69,7 @@ func (f FuturesClient) GetOpenInterest(req *models.RequestForOpenInterest) (*mod
 	if err != nil {
 		return nil, errors.Wrap(err, "error during request")
 	}
-	var model models.ResponseForOpenInterest
+	var model rest3.ResponseForOpenInterest
 
 	if len(res) != 0 {
 		err = json.Unmarshal(res, &model)
@@ -83,7 +83,7 @@ func (f FuturesClient) GetOpenInterest(req *models.RequestForOpenInterest) (*mod
 	return &model, nil
 }
 
-func (f FuturesClient) GetFundingPayments(future string, start, end time.Time) (*models.ResponseForFundingPayments, error) {
+func (f FuturesClient) GetFundingPayments(future string, start, end time.Time) (*rest3.ResponseForFundingPayments, error) {
 	var url string
 
 	if future != "" {
@@ -100,7 +100,7 @@ func (f FuturesClient) GetFundingPayments(future string, start, end time.Time) (
 	if err != nil {
 		return nil, err
 	}
-	var model models.ResponseForFundingPayments
+	var model rest3.ResponseForFundingPayments
 	err = json.Unmarshal(res, &model)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (f FuturesClient) GetFundingPayments(future string, start, end time.Time) (
 	return &model, nil
 }
 
-func (f FuturesClient) GetFundingRate(req *models.RequestForFundingRates) (*models.ResponseForFundingRates, error) {
+func (f FuturesClient) GetFundingRate(req *rest3.RequestForFundingRates) (*rest3.ResponseForFundingRates, error) {
 	var url string
 
 	if req.Future != "" {
@@ -127,7 +127,7 @@ func (f FuturesClient) GetFundingRate(req *models.RequestForFundingRates) (*mode
 		return nil, errors.Wrap(err, "error during request")
 	}
 
-	var model models.ResponseForFundingRates
+	var model rest3.ResponseForFundingRates
 
 	if len(res) != 0 {
 		err = json.Unmarshal(res, &model)
@@ -141,7 +141,7 @@ func (f FuturesClient) GetFundingRate(req *models.RequestForFundingRates) (*mode
 	return &model, nil
 }
 
-func (f FuturesClient) GetIndexWeights(req *models.RequestForIndexWeights) (*models.ResponseForIndexWeights, error) {
+func (f FuturesClient) GetIndexWeights(req *rest3.RequestForIndexWeights) (*rest3.ResponseForIndexWeights, error) {
 	if req.Index == "" {
 		return nil, fmt.Errorf("invalid params, must pass `Index`")
 	}
@@ -154,7 +154,7 @@ func (f FuturesClient) GetIndexWeights(req *models.RequestForIndexWeights) (*mod
 		return nil, errors.Wrap(err, "error during request")
 	}
 
-	var model models.ResponseForIndexWeights
+	var model rest3.ResponseForIndexWeights
 
 	if len(res) != 0 {
 		err = json.Unmarshal(res, &model)
@@ -168,14 +168,14 @@ func (f FuturesClient) GetIndexWeights(req *models.RequestForIndexWeights) (*mod
 	return &model, nil
 }
 
-func (f FuturesClient) GetExpiredFutures(req *models.RequestForExpiredFutures) (*models.ResponseForExpiredFutures, error) {
+func (f FuturesClient) GetExpiredFutures(req *rest3.RequestForExpiredFutures) (*rest3.ResponseForExpiredFutures, error) {
 	url := rest.ExpiredFuturesEndpoint
 
 	res, err := f.client.Get(url)
 	if err != nil {
 		return nil, errors.Wrap(err, "error during request")
 	}
-	var model models.ResponseForExpiredFutures
+	var model rest3.ResponseForExpiredFutures
 
 	if len(res) != 0 {
 		err = json.Unmarshal(res, &model)
@@ -189,7 +189,7 @@ func (f FuturesClient) GetExpiredFutures(req *models.RequestForExpiredFutures) (
 	return &model, nil
 }
 
-func (f FuturesClient) GetHistoricalIndex(req *models.RequestForHistoricalIndex) (*models.ResponseForHistoricalIndex, error) {
+func (f FuturesClient) GetHistoricalIndex(req *rest3.RequestForHistoricalIndex) (*rest3.ResponseForHistoricalIndex, error) {
 	if req.Index == "" {
 		return nil, fmt.Errorf("invalid params, must pass `Index`")
 	}
@@ -214,7 +214,7 @@ func (f FuturesClient) GetHistoricalIndex(req *models.RequestForHistoricalIndex)
 		return nil, errors.Wrap(err, "error during request")
 	}
 
-	var model models.ResponseForHistoricalIndex
+	var model rest3.ResponseForHistoricalIndex
 
 	if len(res) != 0 {
 		err = json.Unmarshal(res, &model)
@@ -228,7 +228,7 @@ func (f FuturesClient) GetHistoricalIndex(req *models.RequestForHistoricalIndex)
 	return &model, nil
 }
 
-func (f FuturesClient) PostFuturesAccountLeverageChange(req *models.RequestForFuturesAccountLeverageChange) (*models.ResponseForFuturesAccountLeverageChange, error) {
+func (f FuturesClient) PostFuturesAccountLeverageChange(req *rest3.RequestForFuturesAccountLeverageChange) (*rest3.ResponseForFuturesAccountLeverageChange, error) {
 	panic("implement me")
 }
 

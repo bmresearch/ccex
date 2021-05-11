@@ -171,7 +171,7 @@ func (c *Client) Delete(endpoint string, data map[string]interface{}) ([]byte, e
 
 // NewClient returns a new rest client for ftx
 func NewClient(cfg *config.Configuration) (*Client, error) {
-	rc, err := rest.New(ApiUrl)
+	rc, err := rest.New(Url)
 	if err != nil {
 		return &Client{}, err
 	}

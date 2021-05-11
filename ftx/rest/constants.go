@@ -4,7 +4,7 @@ package rest
 	General constants needed to perform requests to the API.
 */
 const (
-	ApiUrl = "https://ftx.com/api"
+	Url = "https://ftx.com/api"
 )
 
 /*

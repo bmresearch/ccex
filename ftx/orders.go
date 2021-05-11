@@ -2,7 +2,7 @@ package ftx
 
 import (
 	"github.com/murlokito/ccex/ftx/rest"
-	models "github.com/murlokito/ccex/models/rest"
+	rest3 "github.com/murlokito/ccex/models/rest"
 )
 
 type (
@@ -13,11 +13,11 @@ type (
 	}
 )
 
-func (o OrdersClient) GetOpenOrders(req *models.RequestForOpenOrders) (models.ResponseForOpenOrders, error) {
+func (o OrdersClient) GetOpenOrders(req *rest3.RequestForOpenOrders) (rest3.ResponseForOpenOrders, error) {
 	panic("implement me")
 }
 
-func (o OrdersClient) GetOrderHistory(req *models.RequestForOrderHistory) (models.ResponseForOrderHistory, error) {
+func (o OrdersClient) GetOrderHistory(req *rest3.RequestForOrderHistory) (rest3.ResponseForOrderHistory, error) {
 	panic("implement me")
 }
 /*

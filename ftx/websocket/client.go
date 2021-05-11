@@ -3,8 +3,9 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/murlokito/ccex/models/ws"
 	"time"
+
+	ws "github.com/murlokito/ccex/ftx/models/websocket"
 
 	"github.com/murlokito/ccex/exchange"
 	"github.com/murlokito/ccex/internal/logger"
@@ -16,14 +17,14 @@ import (
 
 // Client represents the websocket client for FTX
 type Client struct {
-	// OnMarkets holds the handler for markets messages.
-	OnMarkets exchange.OnMarketsHandler
-	// OnOrderBook holds the handler for order book messages.
-	OnOrderBook exchange.OnOrderBookHandler
+	// OnOrderBookDelta holds the handler for order book messages.
+	OnOrderBookDelta exchange.OrderBookDeltaHandler
+	// OnOrderBookSnapshot holds the handler for order book messages.
+	OnOrderBookSnapshot exchange.OrderBookSnapshotHandler
 	// OnTicker holds the handler for ticker messages.
-	OnTicker exchange.OnTickerHandler
+	OnTicker exchange.TickerHandler
 	// OnTrade holds the handler for trade messages.
-	OnTrade exchange.OnTradeHandler
+	OnTrades exchange.TradesHandler
 
 	// config holds the config used to establish the connection.
 	config *config.Configuration
@@ -57,26 +58,6 @@ func (c *Client) Connected() bool {
 	return c.ws.Connected()
 }
 
-// OnMarketHandler sets the handler for market messages
-func (c *Client) OnMarketHandler(handler exchange.OnMarketsHandler) {
-	c.OnMarkets = handler
-}
-
-// OnOrderBookHandler sets the handler for orderbook messages
-func (c *Client) OnOrderBookHandler(handler exchange.OnOrderBookHandler) {
-	c.OnOrderBook = handler
-}
-
-// OnTradesHandler sets the handler for trade messages
-func (c *Client) OnTradesHandler(handler exchange.OnTradeHandler) {
-	c.OnTrade = handler
-}
-
-// OnTickerHandler sets the handler for ticker messages
-func (c *Client) OnTickerHandler(handler exchange.OnTickerHandler) {
-	c.OnTicker = handler
-}
-
 // OnMessage is called by the underlying websocket client whenever it reads a message, similar to event-based actions.
 func (c Client) OnMessage(message []byte) error {
 	var v map[string]interface{}
@@ -85,6 +66,10 @@ func (c Client) OnMessage(message []byte) error {
 	if err != nil {
 		logger.Error(err.Error())
 	}
+
+	var (
+		msgChannel, msgMarket, msgType interface{}
+	)
 
 	msgType, ok := v["type"]
 	if !ok {
@@ -104,56 +89,68 @@ func (c Client) OnMessage(message []byte) error {
 
 		return fmt.Errorf("code: %v type: %v msg: %v", code, msgType, msg)
 	}
-	var (
-		channel, market interface{}
-	)
 
-	channel, ok = v["channel"]
+	msgChannel, ok = v["channel"]
 	if !ok {
 		c.logger.Error("Could not get message channel")
 		return fmt.Errorf("could not get message channel")
 	}
+	channel := fmt.Sprintf("%v", msgChannel)
 
-	market, ok = v["market"]
+	msgMarket, ok = v["market"]
 	if !ok {
 		c.logger.Error("Could not get message market")
 		return fmt.Errorf("could not get message market")
 	}
+	market := fmt.Sprintf("%v", msgMarket)
 
-	if msgType == "subscribed" || msgType == "unsubscribed" {
+	switch msgType {
+	case Subscribed:
+		c.subscriptions[channel] = append(c.subscriptions[channel], market)
 		c.logger.Infof("Successfully %v to channel {%v} for market {%v}", msgType, channel, market)
-		return nil
+		break
+	case Unsubscribed:
+		var subs []string
+		for _, sub := range c.subscriptions[channel] {
+			if sub == market {
+				continue
+			}
+			subs = append(subs, sub)
+		}
+		c.subscriptions[channel] = subs
+		c.logger.Infof("Successfully %v to channel {%v} for market {%v}", msgType, channel, market)
+		break
 	}
 
 	switch channel {
-	case Markets:
-		if c.OnMarkets != nil {
-			var markets ws.MarketMessage
-			err = json.Unmarshal(message, &markets)
-			if err != nil {
-				return err
-			}
-			c.OnMarkets(markets)
-		}
-		break
 	case Trades:
-		if c.OnTrade != nil {
+		if c.OnTrades != nil {
 			var trades ws.TradeMessage
 			err = json.Unmarshal(message, &trades)
 			if err != nil {
 				return err
 			}
-			c.OnTrade(trades)
+			c.OnTrades(trades.Market, trades.Data.Standard())
 		}
 		break
 	case Orderbook:
-		if c.OnOrderBook != nil {
-			var orderbook ws.OrderBookMessage
-			err = json.Unmarshal(message, &orderbook)
-			if err != nil {
-				return err
+		var orderBook ws.OrderBookMessage
+		err = json.Unmarshal(message, &orderBook)
+		//fmt.Printf("action: %v \nbids: %v\nasks: %v\n", orderBook.Data.Action, orderBook.Data.Bids, orderBook.Data.Asks)
+		if err != nil {
+			return err
+		}
+		switch orderBook.Data.Action {
+		case Snapshot:
+			if c.OnOrderBookSnapshot != nil {
+				c.OnOrderBookSnapshot(orderBook.Market, orderBook.Snapshot())
 			}
-			c.OnOrderBook(orderbook)
+			break
+		case Delta:
+			if c.OnOrderBookDelta != nil {
+				c.OnOrderBookDelta(orderBook.Market, orderBook.Delta())
+			}
+			break
 		}
 		break
 	case Ticker:
@@ -163,7 +160,7 @@ func (c Client) OnMessage(message []byte) error {
 			if err != nil {
 				return err
 			}
-			c.OnTicker(ticker)
+			c.OnTicker(ticker.Market, ticker.Data.Standard())
 		}
 		break
 	}
@@ -218,40 +215,69 @@ func (c Client) Subscribe(channel string, market string) error {
 		return err
 	}
 
-	c.subscriptions[channel] = append(c.subscriptions[channel], market)
-
 	return nil
 }
 
-// NewClient returns a configured websocket client for FTX
-func NewClient(config *config.Configuration, marketsHandler exchange.OnMarketsHandler,
-	tickerHandler exchange.OnTickerHandler, tradesHandler exchange.OnTradeHandler, orderbookHandler exchange.OnOrderBookHandler) (*Client, error) {
+// NewClientWith returns a configured websocket client for FTX
+func NewClientWith(config *config.Configuration, tickerHandler exchange.TickerHandler,
+	tradesHandler exchange.TradesHandler, orderBookSnapshotHandler exchange.OrderBookSnapshotHandler,
+	orderBookDeltaHandler exchange.OrderBookDeltaHandler) (*Client, error) {
 	clientLogger := logger.NewLogger()
-	ws, err := websocket.New(Url, clientLogger)
+
+	websocketBase, err := websocket.New(Url, clientLogger)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &Client{
+		config:              config,
+		ws:                  websocketBase,
+		logger:              clientLogger,
+		subscriptions:       map[string][]string{},
+		OnTicker:            tickerHandler,
+		OnTrades:            tradesHandler,
+		OnOrderBookDelta:    orderBookDeltaHandler,
+		OnOrderBookSnapshot: orderBookSnapshotHandler,
+	}
+
+	if config != nil {
+		if config.GetAuth() != nil {
+			websocketBase.OnConnected = client.Authenticate
+		}
+	}
+
+	websocketBase.OnMessage = client.OnMessage
+
+	websocketBase.SetKeepAliveTimeout(15 * time.Second)
+
+	return client, nil
+}
+
+// NewClient returns a configured websocket client for FTX
+func NewClient(config *config.Configuration, messageHandler exchange.MessageHandler) (*Client, error) {
+	clientLogger := logger.NewLogger()
+
+	websocketBase, err := websocket.New(Url, clientLogger)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &Client{
 		config:        config,
-		ws:            ws,
+		ws:            websocketBase,
 		logger:        clientLogger,
 		subscriptions: map[string][]string{},
-		OnTicker:      tickerHandler,
-		OnTrade:       tradesHandler,
-		OnOrderBook:   orderbookHandler,
-		OnMarkets:     marketsHandler,
 	}
 
 	if config != nil {
 		if config.GetAuth() != nil {
-			ws.OnConnected = client.Authenticate
+			websocketBase.OnConnected = client.Authenticate
 		}
 	}
 
-	ws.OnMessage = client.OnMessage
+	websocketBase.OnMessage = websocket.OnMessageHandler(messageHandler)
 
-	ws.SetKeepAliveTimeout(15 * time.Second)
+	websocketBase.SetKeepAliveTimeout(15 * time.Second)
 
 	return client, nil
 }

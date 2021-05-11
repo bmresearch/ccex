@@ -1,4 +1,4 @@
-package ws
+package websocket
 
 type (
 	// BaseOperation is the base of the message, all common attributes.

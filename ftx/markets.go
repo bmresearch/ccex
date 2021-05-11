@@ -2,7 +2,7 @@ package ftx
 
 import (
 	"github.com/murlokito/ccex/ftx/rest"
-	models "github.com/murlokito/ccex/models/rest"
+	rest3 "github.com/murlokito/ccex/models/rest"
 )
 
 type (
@@ -13,23 +13,23 @@ type (
 	}
 )
 
-func (m MarketsClient) GetMarkets(req *models.RequestForMarkets) (*models.ResponseForMarkets, error) {
+func (m MarketsClient) GetMarkets(req *rest3.RequestForMarkets) (*rest3.ResponseForMarkets, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetMarket(req *models.RequestForMarket) (*models.ResponseForMarket, error) {
+func (m MarketsClient) GetMarket(req *rest3.RequestForMarket) (*rest3.ResponseForMarket, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetOrderBook(req *models.RequestForOrderBook) (*models.ResponseForOrderBook, error) {
+func (m MarketsClient) GetOrderBook(req *rest3.RequestForOrderBook) (*rest3.ResponseForOrderBook, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetTrades(req *models.RequestForTrades) (*models.ResponseForTrades, error) {
+func (m MarketsClient) GetTrades(req *rest3.RequestForTrades) (*rest3.ResponseForTrades, error) {
 	panic("implement me")
 }
 
-func (m MarketsClient) GetCandles(req *models.RequestForCandles) (*models.ResponseForCandles, error) {
+func (m MarketsClient) GetCandles(req *rest3.RequestForCandles) (*rest3.ResponseForCandles, error) {
 	panic("implement me")
 }
 

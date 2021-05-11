@@ -7,10 +7,17 @@ const (
 	Url = "wss://ftx.com/ws/"
 
 	/*
+		Message types
+	 */
+	Subscribed = "subscribed"
+	Unsubscribed = "unsubscribed"
+	Snapshot = "partial"
+	Delta = "update"
+
+	/*
 		Public websocket channels
 	*/
 	Ticker    = "ticker"
-	Markets   = "markets"
 	Trades    = "trades"
 	Orderbook = "orderbook"
 
